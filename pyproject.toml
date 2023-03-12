@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "etri-multi-modal"
+version = "0.2.0"
+description = ""
+authors = [
+    "Doohoon Kim <me@doohoon.kim>",
+]
+readme = "README.md"
+packages = [{include = "etri_multi_modal"}]
+
+[tool.poetry.dependencies]
+python = "3.10.4"
+numpy = "^1.24.2"
+pandas = "^1.5.3"
+
+
+[tool.poetry.group.dev.dependencies]
+ipykernel = "^6.21.3"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
