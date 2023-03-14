@@ -1,0 +1,27 @@
+#!/bin/sh
+
+data_file_name="KEMDy20_v1_1.zip"
+gd_file_id="1FeJp5hhYr8qDeafTF9aBhQpDGPBtK2vY"
+
+download_data() {
+    wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=${gd_file_id}' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=${gd_file_id}" -O ${data_file_name} && rm -rf /tmp/cookies.txt
+}
+
+decompress_data() {
+    unzip $data_file_name
+}
+
+check_data_if_exist() {
+    if [ ! -d "KEMDy20" ]; then
+        return 0
+    else
+        return 1
+    fi    
+}
+
+if check_data_if_exist; then
+    if [ ! -f "./${data_file_name}"]; then
+        download_data
+        decompress_data
+    fi
+fi
