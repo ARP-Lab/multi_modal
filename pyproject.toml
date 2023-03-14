@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "etri-multi-modal"
-version = "0.2.0"
+version = "0.3.0"
 description = ""
 authors = [
     "Doohoon Kim <me@doohoon.kim>",
@@ -12,6 +12,19 @@ packages = [{include = "etri_multi_modal"}]
 python = "3.10.4"
 numpy = "^1.24.2"
 pandas = "^1.5.3"
+torch = "^1.13.1"
+tensorflow = "^2.11.0"
+keras = "^2.11.0"
+
+matplotlib = "^3.7.0"
+scipy = "^1.10.1"
+jupyterlab = "^3.6.1"
+
+opencv-python = "^4.7.0.72"
+albumentations = "^1.3.0"
+
+tensorflow-datasets = "^4.8.2"
+scikit-image = "^0.20.0"
 
 
 [tool.poetry.group.dev.dependencies]
