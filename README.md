@@ -25,4 +25,4 @@
 4. 사용하시면 됩니다.
 
 ## Using colab
-1. https://colab.research.google.com/github/ARP-Lab/multi_modal/blob/main/<file-name>.ipynb 로 접근하시면 됩니다.
+1. https://colab.research.google.com/github/ARP-Lab/multi_modal/blob/main/(file-name).ipynb 로 접근하시면 됩니다.
