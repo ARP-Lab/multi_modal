@@ -19,8 +19,10 @@ check_data_if_exist() {
     fi    
 }
 
-if check_data_if_exist; then
-    if [ ! -f "./${data_file_name}"]; then
+res=$(check_data_if_exist)
+
+if $res ; then
+    if [ ! -f "./${data_file_name}" ]; then
         download_data
         decompress_data
     fi
