@@ -10,7 +10,7 @@ download_data() {
 
 decompress_data() {
     mkdir $unextract_dir
-    unzip $data_file_name -d ./${unextract_dir}
+    unzip $data_file_name -d ./${unextract_dir} > /dev/null 2>&1
 }
 
 check_data_if_exist() {
