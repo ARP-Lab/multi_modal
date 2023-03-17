@@ -1,5 +1,6 @@
 #!/bin/sh
 
+unextract_dir="KEMDy20"
 data_file_name="KEMDy20_v1_1.zip"
 gd_file_id="1FeJp5hhYr8qDeafTF9aBhQpDGPBtK2vY"
 
@@ -8,11 +9,12 @@ download_data() {
 }
 
 decompress_data() {
-    unzip $data_file_name
+    mkdir $unextract_dir
+    unzip $data_file_name -d ./${unextract_dir}
 }
 
 check_data_if_exist() {
-    if [ ! -d "KEMDy20" ]; then
+    if [ ! -d $unextract_dir ]; then
         return 0
     else
         return 1
