@@ -10,7 +10,10 @@ packages = [{include = "etri_multi_modal"}]
 
 [tool.poetry.dependencies]
 python = "3.10.4"
-numpy = "^1.24.2"
+
+numba = "^0.56.4"
+iprogress = "^0.4"
+
 pandas = "^1.5.3"
 torch = "^1.13.1"
 tensorflow = "^2.11.0"
@@ -28,6 +31,10 @@ scikit-image = "^0.20.0"
 transformers = "^4.27.1"
 datasets = "^2.10.1"
 evaluate = "^0.4.0"
+soundfile = "^0.12.1"
+
+towhee = "^0.9.0"
+librosa = "^0.10.0.post2"
 
 
 [tool.poetry.group.dev.dependencies]
