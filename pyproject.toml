@@ -35,6 +35,8 @@ soundfile = "^0.12.1"
 
 towhee = "^0.9.0"
 librosa = "^0.10.0.post2"
+tqdm = "^4.65.0"
+pyctcdecode = "^0.5.0"
 
 
 [tool.poetry.group.dev.dependencies]
