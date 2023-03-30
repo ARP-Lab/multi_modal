@@ -35,6 +35,7 @@ soundfile = "^0.12.1"
 
 librosa = "^0.10.0.post2"
 towhee = "^0.9.0"
+torchmetrics = "^0.11.4"
 
 [tool.poetry.group.dev.dependencies]
 ipykernel = "^6.21.3"
