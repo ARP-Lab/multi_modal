@@ -10,3 +10,5 @@ poetry.lock
 
 model/test
 model/data
+
+data
