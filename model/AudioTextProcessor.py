@@ -15,15 +15,16 @@ from datasets import (
     Audio, Dataset
 )
 
-from utils.dfl import dfl_tools
+from utils.dfl import dfl_base, dfl_tools
 import omegaconf
 
 import pickle
 
+
 class AudioTextProcessor(object):
     def __init__(
         self,
-        conf_path: str="",
+        conf_path: str=""
     ) -> None:
         
         _p = dfl_tools.find_dfl_path(
@@ -118,8 +119,11 @@ class AudioTextProcessor(object):
         
     def make_data(
         self
-    ):
+    ) -> None:
         
+        if dfl_base.exists(f"{self._conf.embedding_data_path}"):
+            dfl_base.make_dir(f"{self._conf.embedding_data_path}")
+                
         anno_path = dfl_tools.find_dfl_path(
             self._conf.target_data_path, ["_eval", ".csv"],
             mode="f", cond="a",
@@ -141,8 +145,6 @@ class AudioTextProcessor(object):
                 "file_names": f_names, 
                 "txt_embeddings": txt_embeddings, 
                 "wav_embeddings": wav_embeddings,
-                "EDA": eda,
-                "Temp": temp,
                 "Emotion": anno.Emotion,
                 "Arousal": anno.Arousal,
                 "Valence": anno.Valence
@@ -151,7 +153,12 @@ class AudioTextProcessor(object):
             if self._conf.device == "cuda":
                 torch.cuda.empty_cache()
             
-            with open(f"{self._conf.embedding_data_path}/{_s_anno}.pkl", "wb") as f:
+            _now_model_audio = self._conf.pre_trained.audio_model.split("/")
+            _now_model_audio = _now_model_audio[0] if len(_now_model_audio) < 2 else _now_model_audio[1]
+            _now_model_text = self._conf.pre_trained.text_model.split("/")
+            _now_model_text = _now_model_text[0] if len(_now_model_text) < 2 else _now_model_text[1]
+                
+            with open(f"{self._conf.embedding_data_path}/{_s_anno}_AudioText_{_now_model_audio}_.pkl", "wb") as f:
                  pickle.dump(data, f, pickle.HIGHEST_PROTOCOL)
             
 
