@@ -3,8 +3,8 @@ device: "cuda"
 target_data_path: "./org_KEMDy20"
 embedding_data_path": "./data"
 pre_trained:
-  audio_model: "BM-K/KoSimCSE-bert-multitask"
-  text_model: "facebook/data2vec-audio-base-960h"
+  audio_model: "facebook/data2vec-audio-base-960h"
+  text_model: "BM-K/KoSimCSE-bert-multitask"
 audio_conf:
   return_tensors: "pt"
   return_attention_mask: true
