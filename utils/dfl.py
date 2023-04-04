@@ -9,6 +9,35 @@ from typing import List, Tuple
 from enum import Enum
 
 
+class dfl_base(object):
+    @classmethod
+    def exists(
+        cls,
+        target: str
+    ) -> bool:
+        
+        return os.path.exists(target)
+    
+    
+    @classmethod
+    def make_dir(
+        cls,
+        base_path: str,
+        target: str
+    ) -> bool:
+        
+        try:
+            _t = f"{base_path}/{target}"
+            if not cls.exists(_t):
+                os.makedirs(_t)
+                return True
+            
+        except OSError:
+            pass
+        
+        return False
+    
+
 class dfl_tools(object):
     @staticmethod
     def _recu_limit_chk(
@@ -73,7 +102,6 @@ class dfl_tools(object):
     def get_dfl_list(
         cls,
         target_path: str,
-        *,
         mode: str="d"
     ) -> List[Tuple[str, str]]:
         
@@ -101,7 +129,6 @@ class dfl_tools(object):
     def find_key_in_str(
         cls,
         s: str,
-        *,
         regex_keys: List[str]=[""],
         cond: str="a"
     ):
@@ -112,10 +139,9 @@ class dfl_tools(object):
         cond = list(cond)
         cond.sort()
         cond = "".join(str(x) for x in cond)
+        # and not len(cond) < 2, \
         assert cond != "ao" \
-            and (cond != "a" or cond != "o") \
-            and not len(cond) < 2, \
-            "\'cond\' value must include one of the following type only one alphabet."
+            and (cond != "a" or cond != "o"), "\'cond\' value must include one of the following type only one alphabet."
         
         _founded = 1 if cond == "a" else 0
         
@@ -138,7 +164,6 @@ class dfl_tools(object):
     def find_dfl_path(
         cls,
         target_path: str,
-        *,
         regex_keys: List[str]=[""],
         mode: str="d",
         cond: str="a",
