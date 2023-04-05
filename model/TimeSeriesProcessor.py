@@ -80,6 +80,7 @@ class TimeSeriesProcessor(object):
         
         return _ts
     
+    
     def _make_data_from_timeseries(
         self,
         path: str
@@ -92,7 +93,6 @@ class TimeSeriesProcessor(object):
     
         return _ts
 
-        pass
     
     def make_data(
         self
@@ -143,5 +143,5 @@ class TimeSeriesProcessor(object):
                  
 
 if __name__ == "__main__" :
-    ATP = TimeSeriesProcessor("./model/conf")
-    ATP.make_data()
+    TSP = TimeSeriesProcessor("./model/conf")
+    TSP.make_data()
