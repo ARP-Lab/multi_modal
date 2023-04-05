@@ -1,31 +1,42 @@
-#!/bin/sh
+#!/bin/bash
 
-unextract_dir="KEMDy20"
-data_file_name="KEMDy20_v1_1.zip"
-gd_file_id="1FeJp5hhYr8qDeafTF9aBhQpDGPBtK2vY"
+declare -a data
+
+data_y19=("KEMDy19" "KEMDy19.zip" "1TMDXYW34tf9D3koVxsqRRCRav0VgJwSA")
+data_y20=("KEMDy20" "KEMDy20_v1_1.zip" "1FeJp5hhYr8qDeafTF9aBhQpDGPBtK2vY")
 
 download_data() {
-    wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=${gd_file_id}' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=${gd_file_id}" -O ${data_file_name} && rm -rf /tmp/cookies.txt
+    data_file_name=$1
+    gd_file_id=$2
+    f_id="'https://docs.google.com/uc?export=download&id=${gd_file_id}'"
+    wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate ${f_id} -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=${gd_file_id}" -O ${data_file_name} && rm -rf /tmp/cookies.txt
 }
 
 decompress_data() {
-    mkdir $unextract_dir
-    unzip $data_file_name -d ./${unextract_dir} > /dev/null 2>&1
+    mkdir $1
+    unzip $2 -d ./$1 > /dev/null 2>&1
 }
 
 check_data_if_exist() {
-    if [ ! -d $unextract_dir ]; then
+    if [ ! -d $1 ]; then
         return 0
     else
         return 1
     fi    
 }
 
-res=$(check_data_if_exist)
+if [ "$1" = "y19" ]; then
+    data=(${data_y19[@]})
+else
+    data=(${data_y20[@]})
+fi
 
-if $res ; then
-    if [ ! -f "./${data_file_name}" ]; then
-        download_data
+check_data_if_exist ${data[0]}
+res=$?
+
+if [ $res -eq 0 ]; then
+    if [ ! -f "./${data[1]}" ]; then
+        download_data ${data[1]} ${data[2]}
     fi
-    decompress_data
+    decompress_data ${data[0]} ${data[1]}
 fi
