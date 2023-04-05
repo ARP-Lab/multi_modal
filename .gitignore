@@ -1,5 +1,8 @@
 .DS_Store
+.vscode
+
 __pycache__
+*/__pycache__
 
 KEMDy20
 org_KEMDy20
@@ -10,7 +13,5 @@ KEMDy20_v1_1.zip
 poetry.lock
 
 model/test
-model/data
-model/__pycache__
 
 data
