@@ -1,0 +1,6 @@
+target_data_path: "./org_KEMDy20"
+embedding_data_path": "./data"
+choose_var: 
+  eda: "eda"
+  ibi: "ibi"
+  temp: "temp"
