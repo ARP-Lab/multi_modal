@@ -202,7 +202,9 @@ class dfl_tools(object):
                         regex_keys=regex_keys,
                         mode=mode,
                         cond=cond,
-                        recur=recur
+                        recur=recur,
+                        only_leaf=only_leaf,
+                        res_all=only_leaf
                     )
                     
                     if not _chk_d_opt:
@@ -212,7 +214,7 @@ class dfl_tools(object):
                 
                 if not _chk_recu_dir and cls.find_key_in_str(s=_s, regex_keys=regex_keys, cond=cond):
                     res.append(dfl if res_all else dfl[0])
-                
+        
         return res
     
     
