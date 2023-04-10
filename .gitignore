@@ -15,5 +15,7 @@ KEMDy20_v1_1.zip
 poetry.lock
 
 model/test
+*/wandb
+*wandb*
 
 data
