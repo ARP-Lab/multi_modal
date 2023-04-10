@@ -43,6 +43,7 @@ omegaconf = "^2.3.0"
 imblearn = "^0.0"
 sentencepiece = "^0.1.97"
 wandb = "^0.14.2"
+torchinfo = "^1.7.2"
 
 
 [tool.poetry.group.dev.dependencies]
