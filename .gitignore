@@ -13,4 +13,6 @@ model/test
 model/data
 model/__pycache__
 
+*wandb*
+
 data
