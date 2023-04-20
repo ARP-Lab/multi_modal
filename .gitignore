@@ -1,10 +1,13 @@
 .DS_Store
 __pycache__
 
+KEMDy19
 KEMDy20
+org_KEMDy19
 org_KEMDy20
 Dataset
 
+KEMDy19.zip
 KEMDy20_v1_1.zip
 
 poetry.lock
