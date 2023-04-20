@@ -10,6 +10,7 @@ class MLP(UniversalNN):
         conf_id: str="",
         input_length: int=0,
         input_width: int=0,
+        act_func: str="gelu",
         last_act_off: bool=False
     ):
         
@@ -19,11 +20,16 @@ class MLP(UniversalNN):
         self.input_width = self._conf.input_width if self._conf.input_width != None else input_width
         self.last_act_off = self._conf.last_act_off if self._conf.last_act_off != None else last_act_off
         
+        _act_func = {
+            "gelu" : [nn.GELU()],
+            "relu" : [nn.Dropout(), nn.ReLU()]
+        }
+        
         self.backbone_seq = [
             nn.Flatten(),
             nn.Linear(self.input_length * self.input_width, self._conf.dim_val["1"]),
-            nn.GELU()
         ]
+        self.backbone_seq += _act_func[act_func]
         
         _dim = [(k, v) for k, v in self._conf.dim_val]
         for i in range(len(_dim) - 1):
@@ -31,7 +37,9 @@ class MLP(UniversalNN):
             
             if i == len(_dim) - 1 and self.last_act_off:
                 _last_act_off = True
-            self.backbone_seq.append(self.MLP_block(_dim[i][1], _dim[i + 1][1], _last_act_off))
+            self.backbone_seq += [
+                self.MLP_block(_dim[i][1], _dim[i + 1][1], _last_act_off)
+            ]
             
         
     def forward(self, x):
@@ -48,10 +56,16 @@ class MLP(UniversalNN):
             self,
             fl_val: int,
             sl_val: int,
+            act_func: str="gelu",
             last_act_off: bool=False
         ):
             
             super().__init__()
+            
+            _act_func = {
+                "gelu" : [nn.GELU()],
+                "relu" : [nn.Dropout(), nn.ReLU()]
+            }
             
             self.backbone_seq = [
                 nn.BatchNorm1d(fl_val),
@@ -59,7 +73,7 @@ class MLP(UniversalNN):
             ]
             
             if not last_act_off:
-                self.backbone_seq.append(nn.GELU())
+                self.backbone_seq += _act_func[act_func]
             
             
         def forward(self, x):
