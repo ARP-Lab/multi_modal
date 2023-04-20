@@ -1,8 +1,8 @@
-import pandas as pd
-import numpy as np
-
 import warnings
 warnings.filterwarnings('ignore')
+
+import pandas as pd
+import numpy as np
 
 import omegaconf
 from utils.dfl import dfl_base, dfl_tools
@@ -39,38 +39,40 @@ class TimeSeriesProcessor(object):
         self,
         x
     ):
-        if type(x) != type(np.array([])):
-            return x
-        else: 
-            return x.tolist()
+        
+        return x if type(x) != type(np.array([])) else x.tolist()
 
 
     def _sequence_difference(
         self,
-        ts_list
+        x
     ):
         
-        if type(ts_list) != type([]):
-            return ts_list
-        else:
-            _ts_df = pd.DataFrame(ts_list)
-            res = _ts_df.diff()[1:].values
-            res = res.reshape(len(res),) 
+        res = pd.DataFrame(x).diff()[1:].values
+        return x if type(x) != type([]) else res.reshape(len(res),)
+        # if type(ts_list) != type([]):
+        #     return ts_list
+        # else:
+        #     _ts_df = pd.DataFrame(ts_list)
+        #     res = _ts_df.diff()[1:].values
+        #     res = res.reshape(len(res),) 
                 
-            return res
+        #     return res
         
     
     def _make_data_from_annotation(
         self,
-        path: str
+        path: str,
+        rename_cols: bool=False,
+        expend_cols: bool=False
     ) -> None:
         
         _ts = pd.read_csv(path)
         
-        _ts = _ts[['Segment ID', 'Total Evaluation',' .1',' .2']]
-        _ts.columns = ['segment_id','emotion','valence','arousal']
+        # _ts = _ts[['Segment ID', 'Total Evaluation',' .1',' .2']]
+        _ts.columns = ["segment_id", "emotion", "valence", "arousal"]
         
-        _ts = _ts.drop([0], axis = 0).sort_values('segment_id', ascending=True)
+        _ts = _ts.drop([0], axis=0).sort_values('segment_id', ascending=True)
         
         _ts['eda'] = 0
         _ts['temp'] = 0
@@ -87,7 +89,7 @@ class TimeSeriesProcessor(object):
     ) -> None:
         
         _ts = pd.read_csv(path)
-        _ts = _ts.rename(columns={'acc' : 'eda'}).drop(['timestamp'], axis = 1)
+        # _ts = _ts.rename(columns={'acc' : 'eda'}).drop(['timestamp'], axis = 1)
         
         _ts = _ts.astype({'eda':'object', 'temp':'object', 'ibi':'object'})
     
@@ -124,10 +126,11 @@ class TimeSeriesProcessor(object):
                 for l in _lx:
                     _d = _data_sess[_data_sess['sid'] == _si[_s]][l].dropna(axis=0).values
                     
-                    if len(list(_d)) == 0:
-                        _data_anno[l].iloc[_s] = np.NaN
-                    else: 
-                        _data_anno[l].iloc[_s] = list(_d)
+                    _data_anno[l].iloc[_s] = np.NaN if len(list(_d)) == 0 else list(_d)
+                    # if len(list(_d)) == 0:
+                    #     _data_anno[l].iloc[_s] = np.NaN
+                    # else: 
+                    #     _data_anno[l].iloc[_s] = list(_d)
                         
             _sids = list(_si[1:].values)
             for _s in range(len(_sids)):
