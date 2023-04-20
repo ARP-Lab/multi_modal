@@ -4,25 +4,19 @@
 __pycache__
 */__pycache__
 
+*wandb*
+*k_reference*
+data
+
 KEMDy19
 org_KEMDy19
 KEMDy20
 org_KEMDy20
 
+model/test
+
 KEMDy19.zip
 KEMDy20_v1_1.zip
 
-poetry.lock
-
-model/test
-*/wandb
-*wandb*
-
-*wandb*
-
-
-*k_reference*
-
-data
-
 *.png
+poetry.lock
