@@ -31,6 +31,9 @@ else
     data=(${data_y20[@]})
 fi
 
+mkdir data
+cd data
+
 check_data_if_exist ${data[0]}
 res=$?
 
