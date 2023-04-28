@@ -31,7 +31,9 @@ else
     data=(${data_y20[@]})
 fi
 
-mkdir data
+if [ ! -d "data" ]; then
+    mkdir data
+fi
 cd data
 
 check_data_if_exist ${data[0]}
