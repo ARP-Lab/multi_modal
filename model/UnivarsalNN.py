@@ -9,5 +9,5 @@ class UniversalNN(nn.Module, zconf):
         conf_id: str=""
     ) -> None:
         
-        nn.Module().__init__()
-        zconf().__init__(conf_path, conf_id)
+        nn.Module.__init__()
+        zconf.__init__(conf_path, conf_id)
