@@ -1,0 +1,7 @@
+input_length: None
+input_width: None
+last_act_off: None
+dim_val:
+  1: 768
+  2: 512
+  3: 32
