@@ -10,6 +10,10 @@ class TensorFusionMixer(UniversalNN):
         self,
         ModelA: nn.Module,
         ModelB: nn.Module,
+        ModelC: nn.Module,
+        ModelD: nn.Module,
+        ModelE: nn.Module,
+        ModelF: nn.Module,
         zconf_path: str="",
         zconf_id: str=""
     ):
@@ -20,10 +24,10 @@ class TensorFusionMixer(UniversalNN):
         self.ModelB = ModelB
         self.ModelMLP_fin = MLP(
             conf_path=zconf_path,
-            input_length=self._conf.mlp_input_length,
-            input_width=self._conf.mlp_input_width
-        ).to(device)
-        self.softmax = nn.Softmax(dim=self._conf.softmax_dim)
+            input_length=self.local_conf["mlp_input_length"],
+            input_width=self.local_conf["mlp_input_width"]
+        ).to(self.glob_conf["device"])
+        self.softmax = nn.Softmax(dim=self.local_conf["softmax_dim"])
         
     
     def _tensor_fusion(
@@ -33,19 +37,29 @@ class TensorFusionMixer(UniversalNN):
     ) -> torch.Tensor:
         
         _fml = []
-        
-        for arr1, arr2 in zip(batch_arr1, batch_arr2):
-            _om = torch.outer(arr1, arr2)
-            l, w = _om.shape
-            _om = _om.view(1, l, w)
-            _fml.append(_om)
+    
+        for i, (arr1, arr2, arr3) in enumerate(zip(batch_arr1, batch_arr2, batch_arr3)):
             
+            arr1 = arr1.unsqueeze(0).unsqueeze(0)
+            arr2 = arr2.unsqueeze(0).unsqueeze(-1)
+            arr3 = arr3.unsqueeze(-1).unsqueeze(-1)
+
+            _km = torch.kron(arr3, torch.kron(arr2, arr1,))
+            l, w, d = _km.shape
+
+            _km = _km.view(-1, l, w, d)
+            _fml.append(_km)
+
         _fm = torch.concat(_fml)
-        
-        return _fm
+
+        return fusion__fmmatrix
     
         
-    def forward(self, x1, x2):
+    def forward(
+        self,
+        x1,
+        x2
+    ):
         y1 = self.ModelA(x1)
         y2 = self.ModelB(x2)
         
