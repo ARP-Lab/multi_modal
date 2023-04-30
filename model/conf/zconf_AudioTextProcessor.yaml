@@ -1,5 +1,3 @@
-# for Global
-device: "cuda"
 target_data_path: "./org_KEMDy20"
 embedding_data_path": "./data"
 pre_trained:
