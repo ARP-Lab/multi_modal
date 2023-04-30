@@ -1,0 +1,4 @@
+conv1d_conf:
+  in_channels: 2
+  out_channels: 1
+  kernel_size: 11

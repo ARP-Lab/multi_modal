@@ -1,13 +1,13 @@
 save_pickle: False
 save_csv: False
 pre_trained:
-  audio_model: "facebook/data2vec-audio-base-960h"
+  audio_model: "facebook/data2vec-audio-large-960h"
   text_model: "BM-K/KoSimCSE-bert-multitask"
 audio_conf:
   return_tensors: "pt"
   return_attention_mask: true
   padding: "max_length"
-  max_length: 16000
+  max_length: 48000
   truncation: true
 text_conf:
   return_tensors: "pt"
