@@ -1,7 +1,8 @@
 import torch
 from torch import nn
 
-from model.UnivarsalNN import UniversalNN
+from utils.UnivarsalNN import UniversalNN
+
 
 class CNN_TS_First(UniversalNN):
     def __init__(

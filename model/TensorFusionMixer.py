@@ -1,8 +1,8 @@
 import torch
 from torch import nn
 
-from model.UnivarsalNN import UniversalNN
 from model.MLP import MLP
+from utils.UnivarsalNN import UniversalNN
 
 
 class TensorFusionMixer(UniversalNN):
