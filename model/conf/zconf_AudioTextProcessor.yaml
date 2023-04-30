@@ -1,5 +1,5 @@
-target_data_path: "./org_KEMDy20"
-embedding_data_path": "./data"
+save_pickle: False
+save_csv: False
 pre_trained:
   audio_model: "facebook/data2vec-audio-base-960h"
   text_model: "BM-K/KoSimCSE-bert-multitask"
