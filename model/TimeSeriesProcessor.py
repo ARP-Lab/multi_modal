@@ -1,150 +1,183 @@
 import warnings
 warnings.filterwarnings('ignore')
 
+import itertools
+from itertools import accumulate
+import re
+
 import pandas as pd
 import numpy as np
 
-import omegaconf
+from sklearn.preprocessing import StandardScaler
+from collections import Counter
+
+from utils.zconf import zconf
 from utils.dfl import dfl_base, dfl_tools
 
 import pickle
+import csv
 
 
-class TimeSeriesProcessor(object):
+class TimeSeriesProcessor(zconf):
     def __init__(
         self,
-        conf_path: str=""
+        zconf_path: str="",
+        zconf_id: str=""
     ):
         
-        _p = dfl_tools.find_dfl_path(
-            conf_path, [f"Conf_{self.__class__.__name__}", ".yaml"],
-            mode="f", cond="a", only_leaf=True)
+        super().__init__(zconf_path, zconf_id)
         
-        assert len(_p) != 0, "File not found."
-        
-        self._conf = self._read_conf(_p[0])
-        
-        
-    def _read_conf(
-        self,
-        path: str=""
-    ):
-        
-        assert path != "", "Conf file not found."
-        
-        return omegaconf.OmegaConf.load(path)
     
-    
-    def _from_array_to_list(
+    def make_ts_data_of_year(
         self,
-        x
-    ):
+        year: int=None
+    ) -> None:
         
-        return x if type(x) != type(np.array([])) else x.tolist()
-
-
-    def _sequence_difference(
-        self,
-        x
-    ):
+        assert year is not None, "\"year\" param must input."
+        assert not (year < 19 and year > 20)
         
-        res = pd.DataFrame(x).diff()[1:].values
-        return x if type(x) != type([]) else res.reshape(len(res),)
-        # if type(ts_list) != type([]):
-        #     return ts_list
-        # else:
-        #     _ts_df = pd.DataFrame(ts_list)
-        #     res = _ts_df.diff()[1:].values
-        #     res = res.reshape(len(res),) 
+        path = self.glob_conf["org_data_path"][year]
+        assert path is not ("" or None)
+        
+         # open a file to Session*.csv
+        _res_path = dfl_tools.find_dfl_path(
+            f"{path}", ["Session", r"[0-9]+", "csv"],
+            mode="f", cond="a",
+            recur=True, only_leaf=True, res_all=False)
+        
+        _sess_path = []
+        _anno_path = []
+        
+        for _s in _res_path:
+            _p, _ = _s
+            if _p.find("anno") == -1:
+                _sess_path.append(_p)
+            else:
+                _anno_path.append(_p)
+            
+        _spices = ["emotion", "valence", "arousal"]
+        
+        _opt_regression = [f"{_}" for _ in _spices] + [f"{_}_vector" for _ in _spices] \
+            if self.local_conf["regression"] else []
+        _rdf = pd.DataFrame(columns=["Segment ID", "EDA", "TEMP", \
+            "EDA length", "TEMP length", "Scaled EDA", "Scaled TEMP"] + _opt_regression)
+        
+        for _p in _sess_path:
+            _sses = pd.read_csv(_p, index_col=0)
+            _sses.drop(columns=["ecg" if year == 19 else "ibi"], inplace=True)
+            _sses = _sses.dropna()
+            _sses.reset_index(drop=True, inplace=True)
+            
+            _sid_list = [name for name, _ in _sses.groupby("sid")]
+            _sid_uq = []
+            
+            # Organize EDA and TEMP to zipped each vectors.
+            for _sid in _sid_list:
+                _tk = _sid.split("_")
+                _str = f"{_tk[0]}_{_tk[1]}"
                 
-        #     return res
-        
-    
-    def _make_data_from_annotation(
-        self,
-        path: str,
-        rename_cols: bool=False,
-        expend_cols: bool=False
-    ) -> None:
-        
-        _ts = pd.read_csv(path)
-        
-        # _ts = _ts[['Segment ID', 'Total Evaluation',' .1',' .2']]
-        _ts.columns = ["segment_id", "emotion", "valence", "arousal"]
-        
-        _ts = _ts.drop([0], axis=0).sort_values('segment_id', ascending=True)
-        
-        _ts['eda'] = 0
-        _ts['temp'] = 0
-        _ts['ibi'] = 0
-        
-        _ts = _ts.astype({'eda':'object', 'temp':'object', 'ibi':'object'}).reset_index(drop=True)
-        
-        return _ts
-    
-    
-    def _make_data_from_timeseries(
-        self,
-        path: str
-    ) -> None:
-        
-        _ts = pd.read_csv(path)
-        # _ts = _ts.rename(columns={'acc' : 'eda'}).drop(['timestamp'], axis = 1)
-        
-        _ts = _ts.astype({'eda':'object', 'temp':'object', 'ibi':'object'})
-    
-        return _ts
-
-    
-    def make_data(
-        self
-    ) -> None:
-        
-        if dfl_base.exists(f"{self._conf.embedding_data_path}"):
-            dfl_base.make_dir(f"{self._conf.embedding_data_path}")
-        
-        sess_path = dfl_tools.find_dfl_path(
-            self._conf.target_data_path, ["Session", ".csv"],
-            mode="f", cond="a",
-            recur=True, only_leaf=True, res_all=True)
-        
-        anno_path = dfl_tools.find_dfl_path(
-            self._conf.target_data_path, ["_eval", ".csv"],
-            mode="f", cond="a",
-            recur=True, only_leaf=True, res_all=True)
-        
-        for l in sess_path + anno_path:
-            _all_p_sess, _l_name_sess, _all_p_anno, _l_name_anno = l
-            _s_anno = _l_name_anno.strip("_eval.csv")
+                if _str not in _sid_uq:
+                    _sid_uq.append(_str)
+                
+                _tx = _sses[_sses["sid"].eq(_sid)]
+                
+                _tdf = pd.DataFrame()
+                _tdf["Segment ID"] = [f"{_sid}"]
+                
+                for _sp in ["eda", "temp"]:
+                    _tdf[_sp.upper()] = [_tx[_sp].to_list()]
+                    _tdf[f"{_sp.upper()} length"] = _tdf[_sp.upper()].apply(lambda x:len(x))
             
-            _data_anno = self._make_data_from_annotation(path=_all_p_anno) # for annotations
-            _si = _data_anno['segment_id']
-            _data_sess = self._make_data_from_timeseries(path=_all_p_sess) # for sessions
+                _rdf = pd.concat([_rdf, _tdf])
             
-            for _s in range(len(_si)):
-                _lx = ["eda", "temp", "ibi"]
-                for l in _lx:
-                    _d = _data_sess[_data_sess['sid'] == _si[_s]][l].dropna(axis=0).values
+            _rdf = _rdf.set_index(keys=["Segment ID"], inplace=False, drop=False)
+            
+            # calculate to Scaled EDA, TEMP
+            for _suq in _sid_uq:
+                for _sx in ["M", "F"]:
+                    _rx = _rdf[_rdf["Segment ID"].str.contains(_suq)]
+                    _rx = _rx[_rx["Segment ID"].str.contains(_sx)]
                     
-                    _data_anno[l].iloc[_s] = np.NaN if len(list(_d)) == 0 else list(_d)
-                    # if len(list(_d)) == 0:
-                    #     _data_anno[l].iloc[_s] = np.NaN
-                    # else: 
-                    #     _data_anno[l].iloc[_s] = list(_d)
-                        
-            _sids = list(_si[1:].values)
-            for _s in range(len(_sids)):
-                _tr = _data_anno[_data_anno['segment_id'] == _sids[_s]]
-                _ti = int(_data_anno[_data_anno['segment_id'] == _sids[_s]].index.values)
-                
-                _data_anno = _data_anno.drop([_ti]).append(_tr).reset_index(drop=True)
-                
-            _data_anno['eda'] = _data_anno['eda'].apply(self._sequence_difference).apply(self._from_array_to_list)
-                
-            with open(f"{self._conf.embedding_data_path}/{_s_anno}_TimeSeries.pkl", "wb") as f:
-                 pickle.dump(_data_anno, f, pickle.HIGHEST_PROTOCOL)
-                 
+                    if _rx.empty:
+                        continue
 
-if __name__ == "__main__" :
-    TSP = TimeSeriesProcessor("./model/conf")
-    TSP.make_data()
+                    for _sp in ["EDA", "TEMP"]:
+                        _l = sum(_rx[_sp].to_list(), [])
+                        
+                        # using Standardscale for make scaled EDA and TEMP
+                        _sc = StandardScaler()
+                        _tv = list(itertools.chain(*_sc.fit_transform(np.array(_l).reshape(-1, 1)).reshape(1,-1).tolist()))
+                        _len_list = _rx[f"{_sp} length"].to_list()
+                        
+                        _rx[f"Scaled {_sp}"] = [_tv[x - y: x] for x, y in zip(accumulate(_len_list), _len_list)]                    
+                        # print(f"{_suq}, {_sx}, {_sp}")
+
+                    _rdf.update(_rx.set_index("Segment ID"))
+            
+            if self.local_conf["regression"]:
+                # for Regression(Optional)
+                # Extract of number for find path from annotation path list.
+                _x = _p.split("/")
+                _x = [_ for _ in _x[len(_x) - 1].split(".")][0]
+                _ns = "".join(re.findall(r"\d+", _x))
+                
+                _aps = []
+                for _t_ap in _anno_path:
+                    _lp = _t_ap.split("/")
+                    _aps += list(filter(None, [_t_ap if all(_i in _lp[len(_lp) - 1] for _i in [f"{_ns}", ".csv"]) else []]))
+
+                for _t_ap in _aps:
+                    _anno = pd.read_csv(_t_ap, index_col=0)
+                    _anno.rename(columns={'Unnamed: 9' : 'Segment ID'}, inplace=True)
+                    # _anno = _anno[_anno.columns[8:]]
+                    _anno.reset_index(drop=True, inplace=True)
+                    
+                    from enum import IntEnum
+                    class EmotionEnum(IntEnum):
+                        angry = 1; disgust = 2; fear = 3; happy = 4;
+                        neutral = 5; sad = 6; surprise = 7
+                    
+                    _anno.set_index(keys=["Segment ID"], inplace=True, drop=False)
+                    _anno.rename(columns={f"{_.title()}":f"{_}" for _ in _spices}, inplace=True)
+                    _t_anno = _anno
+                    _anno = _anno[_anno.columns[:1]]
+                    _empty_df = pd.DataFrame(columns=[f"{x}" for x in _spices]+[f"{x}_vector" for x in _spices])
+                    
+                    _anno = pd.concat([_anno, _empty_df], axis=1)
+                    
+                    for _sx in ["M", "F"]:
+                        _rx = _t_anno[_t_anno["Segment ID"].str.contains(_sx)]
+                        _rx.reset_index(drop=True, inplace=True)
+                    
+                        for _sp in _spices:    
+                            _ev_target_val = _rx[[f"{_sp.title()}.{_}" for _ in range(1, 10 + 1)]]
+                            _sp_vec_list = []
+                            
+                            for _i in range(len(_ev_target_val)):
+                                _score_table = {f"{EmotionEnum(_).name}" if _sp == "emotion" else _:0 for _ in range(1, (7 if _sp == "emotion" else 5) + 1)}
+                                _data = Counter(_ev_target_val.iloc[_i])
+                                
+                                for _e in _data.keys():
+                                    _score_table[_e] += _data[_e]
+                                
+                                _sp_vec_list.append(list(_score_table.values()))
+                                
+                            _rx[f"{_sp}_vector"] = pd.Series(_sp_vec_list)
+                        
+                        # concat column to column.
+                        _rx = pd.concat([_rx[_rx.columns[:4]], _rx[_rx.columns[34:]]], axis=1)
+                        _anno.update(_rx.set_index("Segment ID"))
+                        
+                    _rdf.update(_anno.set_index("Segment ID"))
+        
+        _rdf.dropna()
+        _rdf.reset_index(drop=True, inplace=True)
+        
+        if self.local_conf["save_pickle"]:
+            with open(self.local_conf["data_path"] + "/pkl" + f"/ts_data_{year}.pkl", "wb") as f:
+                pickle.dump(_rdf, f, pickle.HIGHEST_PROTOCOL)
+                
+        if self.local_conf["save_csv"]:
+            _rdf.to_csv(self.local_conf["data_path"] + "/csv" + f"/ts_data_{year}.csv", sep=",")
+        
+        return _rdf
