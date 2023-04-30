@@ -1,25 +1,25 @@
 import torch
 from torch import nn
 
-from model.UnivarsalNNModule import UniversalNN
+from model.UnivarsalNN import UniversalNN
 from model.MLP import MLP
 
 
-class TensorMixer(UniversalNN):
+class TensorFusionMixer(UniversalNN):
     def __init__(
         self,
         ModelA: nn.Module,
         ModelB: nn.Module,
-        conf_path: str="",
-        conf_id: str=""
+        zconf_path: str="",
+        zconf_id: str=""
     ):
         
-        super().__init__(conf_path=conf_path, conf_id=conf_id)
+        super().__init__(zconf_path=zconf_path, zconf_id=zconf_id)
         
         self.ModelA = ModelA
         self.ModelB = ModelB
         self.ModelMLP_fin = MLP(
-            conf_path=conf_path,
+            conf_path=zconf_path,
             input_length=self._conf.mlp_input_length,
             input_width=self._conf.mlp_input_width
         ).to(device)
