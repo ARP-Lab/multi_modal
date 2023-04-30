@@ -1,17 +1,19 @@
 .DS_Store
 .vscode
 
+.env
+
 __pycache__
 */__pycache__
 
 *wandb*
 *k_reference*
-data
+data/
 
-KEMDy19
-org_KEMDy19
-KEMDy20
-org_KEMDy20
+KEMDy19/
+org_KEMDy19/
+KEMDy20/
+org_KEMDy20/
 
 model/test
 
