@@ -1,77 +1,90 @@
 from typing import Tuple, Union
 import os
 
-from torch import nn
+from utils.dfl import dfl_tools
 
 import omegaconf
-from utils.dfl import dfl_tools
+from dotenv import load_dotenv
 
 
 class zconf(object):
     def __init__(
         self,
-        conf_path: str="",
-        conf_id: str=""
+        zconf_path: str="",
+        zconf_id: str=""
     ) -> None:
         
-        _glob_os_env_path = os.environ.get("zconf_path")
+        load_dotenv()
+        self.sys_conf = {_i:os.environ[_i] for _i in set(os.environ)}
+        self.glob_conf = None
+        self.local_conf = None
         
-        self.conf_path = _glob_os_env_path if _glob_os_env_path is not None else conf_path
-        self.conf = None
-        
-        assert self.conf_path != "", "zConf path not found"
-        
-        self._local_conf(conf_id=conf_id)
+        self.zconf(zconf_path=zconf_path, zconf_id=zconf_id)
         
         
-    def _get_conf(
+    def __get_path(
         self,
-        conf_name: str=""
+        zconf_name: str=""
     ) -> str:
         
         _p = dfl_tools.find_dfl_path(
-            self.conf_path, [conf_name, ".yaml"],
+            self.zconf_path, [zconf_name, ".yaml"],
             mode="f", cond="a", only_leaf=True)
         
-        assert len(_p) != 0, "File not found."
+        assert len(_p) != 0, f"zconf File has not found({self.zconf_path}/{zconf_name})."
         
         return _p[0]
         
         
-    def _glob_conf(
-        self,
+    def __get_glob(
         func: callable
     ) -> None:
         
-        def wrapper(*args, **kwargs):
-            _glob_conf_name = f"Conf_glob"
+        def wrapper(self, *args, **kwargs):
+            _glob_conf_name = f"zconf_glob"
             
-            _p = self._get_conf(conf_name=_glob_conf_name)
-            self.conf += self._read_conf(_p)
+            _p = self.__get_path(zconf_name=_glob_conf_name)
+            self.glob_conf = self.__read_zconf(_p)
             
-            res = func(*args, **kwargs)
+            res = func(self, *args, **kwargs)
             
             return res
                 
         return wrapper
     
     
-    @_glob_conf
-    def _local_conf(
+    @__get_glob
+    def __get_local(
         self,
-        conf_id: str=""
-    ):
-        _conf_name = f"Conf_{self.__class__.__name__}" + f"_{conf_id}" if conf_id != "" else ""
+        zconf_id: str=""
+    ) -> None:
         
-        _p = self._get_conf(conf_name=_conf_name)
-        self.conf += self._read_conf(_p)
+        _conf_name = f"zconf_{str(self.__class__.__name__)}"
+        _conf_name += f"_{zconf_id}" if zconf_id != "" else ""
+        
+        _p = self.__get_path(zconf_name=_conf_name)
+        self.local_conf = self.__read_zconf(_p)
         
     
-    def _read_conf(
+    def __read_zconf(
         self,
         path: str=""
     ) -> Tuple[Union[omegaconf.DictConfig, omegaconf.ListConfig]]:
         
-        assert path != "", "Conf file not found."
+        assert path != "", "\"path\" param must input."
         
         return omegaconf.OmegaConf.load(path) 
+    
+    
+    def zconf(
+        self,
+        zconf_path: str="",
+        zconf_id: str=""
+    ) -> None:
+    
+        _zconf_path = self.sys_conf["zconf_path"] if "zconf_path" in self.sys_conf else ""
+        self.zconf_path = _zconf_path if _zconf_path is not None else zconf_path
+        
+        assert self.zconf_path != "", "zconf path not found"
+        
+        self.__get_local(zconf_id=zconf_id)

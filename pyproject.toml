@@ -47,8 +47,8 @@ torchsummary = "^1.5.1"
 torchinfo = "^1.7.2"
 torchviz = "^0.0.2"
 torcheval = "^0.0.6"
-torchsummary = "^1.5.1"
 prettytable = "^3.7.0"
+python-dotenv = "^1.0.0"
 
 [tool.poetry.group.dev.dependencies]
 ipykernel = "^6.21.3"
