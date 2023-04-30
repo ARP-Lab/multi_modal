@@ -1,0 +1,61 @@
+# save_model: False
+padding_legnth: 50
+sample_ramdom_k: 8
+lr: 1e-3
+weight_decay: 0.005
+diff_threshold: 0.083
+epochs: 15
+f1_score_conf:
+  task: "multiclass"
+  num_classes: 37
+y19:
+  anno_length: 20
+  except:
+    - 12
+    - 17
+y20:
+  anno_length: 40
+  except:
+encode_dict:
+  angry: 0
+  disgust: 1
+  fear: 2
+  happy: 3
+  neutral: 4
+  sad: 5
+  surprise: 6
+  neutral;surprise: 450
+  neutral;sad: 460
+  happy;neutral: 340
+  angry;neutral: 40
+  disgust;neutral: 140
+  fear;neutral: 240 
+  happy;surprise: 350
+  angry;happy;neutral: 7340
+  angry;disgust: 10
+  happy;neutral;surprise: 3450
+  fear;happy: 230
+  fear;happy;neutral: 2340
+  angry;disgust;neutral: 7140
+  disgust;neutral;sad: 1460
+  happy;sad: 360
+  disgust;happy;neutral: 3410
+  angry;fear: 20
+  angry;fear;neutral: 7240
+  angry;fear;surprise: 7250
+  angry;happy: 730
+  angry;neutral;surprise: 7450
+  angry;sad: 60
+  angry;surprise: 50
+  disgust;fear: 120
+  disgust;happy: 130
+  disgust;neutral;surprise: 1450
+  disgust;sad: 160, disgust;surprise: 150
+  fear;neutral;surprise: 2450
+  fear;sad: 260
+  fear;surprise: 250
+  happy;neutral;sad: 3460
+  neutral;sad;surprise: 4560
+  sad;surprise: 560
+  angry;disgust;fear;neutral;sad: 10000
+  angry;disgust;fear;neutral;surprise: 20000

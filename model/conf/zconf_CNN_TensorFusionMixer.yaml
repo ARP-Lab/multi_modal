@@ -1,0 +1,19 @@
+conv1d_conf:
+  1:
+    in_channels: 12
+    out_channels: 64
+    kernel_size: 3
+  2:
+    in_channels: 64
+    out_channels: 32
+    kernel_size: 3
+MaxPool2d_conf: 2
+Linear_conf:
+  1:
+    in_features: 1152
+    out_features: 64
+  2:
+    in_features: 64
+    out_features: 7
+BatchNorm1d_conf: 64
+Dropout_prob: 0.25

@@ -1,7 +1,0 @@
-input_length: None
-input_width: None
-last_act_off: None
-dim_val:
-  1: 256
-  2: 64
-  3: 14

@@ -1,5 +1,7 @@
 input_length: None
 input_width: None
+act_func: "gelu"
+last_act_off: None
 dim_val:
   1: 768
   2: 512

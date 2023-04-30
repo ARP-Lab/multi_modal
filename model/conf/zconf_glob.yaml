@@ -1,0 +1,5 @@
+device: "cuda"
+data_path: "./data"
+org_data_path:
+  19: "./data/org_KEMDy19"
+  20: "./data/org_KEMDy20"

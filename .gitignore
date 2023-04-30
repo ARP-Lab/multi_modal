@@ -1,19 +1,24 @@
 .DS_Store
-__pycache__
+.vscode
 
-KEMDy19
-KEMDy20
-org_KEMDy19
-org_KEMDy20
-Dataset
+.env
+
+__pycache__
+*/__pycache__
+
+*wandb*
+*k_reference*
+data/
+
+KEMDy19/
+org_KEMDy19/
+KEMDy20/
+org_KEMDy20/
+
+model/test
 
 KEMDy19.zip
 KEMDy20_v1_1.zip
 
+*.png
 poetry.lock
-
-model/test
-model/data
-model/__pycache__
-
-data

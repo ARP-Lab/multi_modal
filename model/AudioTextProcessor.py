@@ -1,6 +1,5 @@
-import re
-
 from typing import List
+import re
 
 import pandas as pd
 
@@ -15,49 +14,39 @@ from datasets import (
     Audio, Dataset
 )
 
+from utils.zconf import zconf
 from utils.dfl import dfl_base, dfl_tools
-import omegaconf
 
 import pickle
+import csv
 
 
-class AudioTextProcessor(object):
+class AudioTextProcessor(zconf):
     def __init__(
         self,
-        conf_path: str=""
+        zconf_path: str="",
+        zconf_id: str=""
     ) -> None:
         
-        _p = dfl_tools.find_dfl_path(
-            conf_path, [f"Conf_{self.__class__.__name__}", ".yaml"],
-            mode="f", cond="a", only_leaf=True)
+        super().__init__(zconf_path=zconf_path, zconf_id=zconf_id)
         
-        assert len(_p) != 0, "File not found."
+        _txt_model_name = self.local_conf["pre_trained"]["text_model"]
+        _wav_model_name = self.local_conf["pre_trained"]["audio_model"]
         
-        self._conf = self._read_conf(_p[0])
+        self.processor = {
+            "wav": AutoProcessor.from_pretrained(_wav_model_name),
+            "txt": AutoTokenizer.from_pretrained(_txt_model_name)
+        }
+        self.model = {
+            "wav": Data2VecAudioModel.from_pretrained(_wav_model_name),
+            "txt": AutoModel.from_pretrained(_txt_model_name)
+        }
         
-        _txt_model_name = self._conf.pre_trained.text_model
-        _wav_model_name = self._conf.pre_trained.audio_model
-        
-        self._wav_processor = AutoProcessor.from_pretrained(_wav_model_name).cuda() \
-            if self._conf.device == "cuda" else AutoProcessor.from_pretrained(_wav_model_name)
-        self._txt_tokenizer = AutoTokenizer.from_pretrained(_txt_model_name).cuda() \
-            if self._conf.device == "cuda" else AutoTokenizer.from_pretrained(_txt_model_name)
-        
-        self._wav_model = Data2VecAudioModel.from_pretrained(_wav_model_name).cuda() \
-            if self._conf.device == "cuda" else Data2VecAudioModel.from_pretrained(_wav_model_name)
-        self._txt_model = AutoModel.from_pretrained(_txt_model_name).cuda() \
-            if self._conf.device == "cuda" else AutoModel.from_pretrained(_txt_model_name)
-        
-        
-    def _read_conf(
-        self,
-        path: str=""
-    ):
-        
-        assert path != "", "Conf file not found."
-        
-        return omegaconf.OmegaConf.load(path)
-    
+        if self.glob_conf.device == "cuda":
+            for _i in ["wav", "txt"]:
+                # self.processor[_i] = self.processor[_i].cuda()
+                self.model[_i] = self.model[_i].cuda()
+                
 
     def _wav_embedding(
         self,
@@ -70,18 +59,18 @@ class AudioTextProcessor(object):
         for i in range(len(_ds)):
             _sr = _ds[i]['wav']['sampling_rate']
             
-            _inputs = self._wav_processor(
+            _inputs = self.processor["wav"](
                 _ds[i]['wav']['array'],
                 sampling_rate=_sr,
-                return_attention_mask=self._conf.return_attention_mask,
-                return_tensors=self._conf.return_tensors,
-                padding=self._conf.padding,
-                max_length=self._conf.max_length,
-                truncation=self._conf.truncation
+                return_attention_mask=self.local_conf["audio_conf"]["return_attention_mask"],
+                return_tensors=self.local_conf["audio_conf"]["return_tensors"],
+                padding=self.local_conf["audio_conf"]["padding"],
+                max_length=self.local_conf["audio_conf"]["max_length"],
+                truncation=self.local_conf["audio_conf"]["truncation"]
             )
         
             with torch.no_grad():
-                output = self._wav_model(**_inputs)
+                output = self.model["wav"](**_inputs)
             
             res.append(output['last_hidden_state'])
         
@@ -103,12 +92,12 @@ class AudioTextProcessor(object):
                 _l = _l.rstrip().lstrip()
                 _s.append(_l)
                 
-        _inputs = self._txt_tokenizer(
+        _inputs = self.processor["txt"](
             _s,
-            return_tensors=self._conf.return_tensors,
-            padding=self._conf.padding,
-            max_length=self._conf.max_length,
-            truncation=self._conf.truncation
+            return_tensors=self.local_conf["text_conf"]["return_tensors"],
+            padding=self.local_conf["text_conf"]["padding"],
+            max_length=self.local_conf["text_conf"]["max_length"],
+            truncation=self.local_conf["text_conf"]["truncation"]
         )
         
         with torch.no_grad():
@@ -118,50 +107,63 @@ class AudioTextProcessor(object):
     
         
     def make_data(
-        self
-    ) -> None:
+        self,
+        year: int=None
+    ) -> pd.DataFrame:
         
-        if dfl_base.exists(f"{self._conf.embedding_data_path}"):
-            dfl_base.make_dir(f"{self._conf.embedding_data_path}")
+        assert year is not None, "\"year\" param must input."
+        assert not (year < 19 and year > 20)
+        
+        path = self.glob_conf["org_data_path"][year]
+        assert path is not ("" or None)
+        
+        # if dfl_base.exists(f"{self._conf.embedding_data_path}"):
+        #     dfl_base.make_dir(f"{self._conf.embedding_data_path}")
                 
         anno_path = dfl_tools.find_dfl_path(
-            self._conf.target_data_path, ["_eval", ".csv"],
+            path, ["_eval", ".csv"],
             mode="f", cond="a",
             recur=True, only_leaf=True, res_all=True)
         
-        for l in anno_path:
-            _all_p, _l_name = l
+        data = {}
+        
+        for _a in anno_path:
+            _all_p, _l_name = _a
             _s_anno = _l_name.strip("_eval.csv")
             anno = pd.read_csv(_all_p, skiprows=1)
             f_names = anno[" .1"]
             
-            txt_files = [self._conf.target_data_path + "/" + _s_anno + "/"+ f + ".txt" for f in f_names]
-            wav_files = [self._conf.target_data_path + "/" + _s_anno + "/"+ f + ".wav" for f in f_names]
+            txt_files = [self.glob_conf["data_path"] + "/" + _s_anno + "/"+ f + ".txt" for f in f_names]
+            wav_files = [self.glob_conf["data_path"] + "/" + _s_anno + "/"+ f + ".wav" for f in f_names]
             
-            txt_embeddings = self._txt_embedding(txt_files=txt_files)
-            wav_embeddings = self._wav_embedding(wav_files=wav_files)
+            _txt_embed = self._txt_embedding(txt_files=txt_files)
+            _wav_embed = self._wav_embedding(wav_files=wav_files)
             
-            data = {
+            _td = {
                 "file_names": f_names, 
-                "txt_embeddings": txt_embeddings, 
-                "wav_embeddings": wav_embeddings,
+                "txt_embeddings": _txt_embed, 
+                "wav_embeddings": _wav_embed,
                 "Emotion": anno.Emotion,
                 "Arousal": anno.Arousal,
                 "Valence": anno.Valence
             }
             
-            if self._conf.device == "cuda":
+            if self.glob_conf["device"] == "cuda":
                 torch.cuda.empty_cache()
             
-            _now_model_audio = self._conf.pre_trained.audio_model.split("/")
+            _now_model_audio = self.local_conf["pre_trained"]["audio_model"].split("/")
             _now_model_audio = _now_model_audio[0] if len(_now_model_audio) < 2 else _now_model_audio[1]
-            _now_model_text = self._conf.pre_trained.text_model.split("/")
+            _now_model_text = self.local_conf["pre_trained"]["text_model"].split("/")
             _now_model_text = _now_model_text[0] if len(_now_model_text) < 2 else _now_model_text[1]
-                
-            with open(f"{self._conf.embedding_data_path}/{_s_anno}_AudioText_{_now_model_audio}_.pkl", "wb") as f:
-                 pickle.dump(data, f, pickle.HIGHEST_PROTOCOL)
             
-
-if __name__ == "__main__" :
-    ATP = AudioTextProcessor("./model/conf")
-    ATP.make_data()
+            if self.local_conf["save_pickle"]:
+                with open(self.glob_conf["data_path"] + "/pkl" + f"/{_s_anno}_AudioText_{_now_model_audio}_.pkl", "wb") as f:
+                    pickle.dump(_td, f, pickle.HIGHEST_PROTOCOL)
+                    
+            if self.local_conf["save_pickle"]:
+                _tdf = pd.DataFrame.from_dict(_td, orient='index')
+                _tdf.to_csv(self.glob_conf["data_path"] + "/csv" + f"{_s_anno}_AudioText_{_now_model_audio}.csv", sep=",")
+            
+            data[_s_anno] = _td
+                
+        return data
