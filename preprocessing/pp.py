@@ -10,11 +10,13 @@ import shutil
 
 from utils.dfl import dfl_base, dfl_tools
 
+
 def read_csv_info(
     file_path: str=""
 ) -> pd.DataFrame:
     
     csv_list = []
+    
     with open(file_path) as f:
         r = csv.reader(f)
 
