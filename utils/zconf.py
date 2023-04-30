@@ -1,13 +1,13 @@
-from typing import Tuple, Union
-import os
-
-from utils.dfl import dfl_tools
-
-import omegaconf
-from dotenv import load_dotenv
-
-
 class zconf(object):
+    from typing import Tuple, Union
+    import os
+
+    from utils.dfl import dfl_tools
+
+    from dotenv import load_dotenv
+    import omegaconf
+    
+    
     def __init__(
         self,
         zconf_path: str="",
@@ -88,3 +88,18 @@ class zconf(object):
         assert self.zconf_path != "", "zconf path not found"
         
         self.__get_local(zconf_id=zconf_id)
+    
+    
+    def check_local_var(
+        self,
+        target: str,
+        other: any
+    ) -> any:
+        
+        _ret = None
+        
+        if target in self.local_conf:
+            _ret = self.local_conf[target] if self.local_conf[target] != None else other
+            
+        return _ret
+        
