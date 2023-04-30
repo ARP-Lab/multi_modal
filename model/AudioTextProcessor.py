@@ -44,7 +44,7 @@ class AudioTextProcessor(zconf):
         
         if self.glob_conf.device == "cuda":
             for _i in ["wav", "txt"]:
-                self.processor[_i] = self.processor[_i].cuda()
+                # self.processor[_i] = self.processor[_i].cuda()
                 self.model[_i] = self.model[_i].cuda()
                 
 
