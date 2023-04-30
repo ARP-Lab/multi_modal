@@ -25,13 +25,13 @@ class TimeSeriesProcessor(zconf):
         zconf_id: str=""
     ):
         
-        super().__init__(zconf_path, zconf_id)
+        super().__init__(zconf_path=zconf_path, zconf_id=zconf_id)
         
     
-    def make_ts_data_of_year(
+    def make_data(
         self,
         year: int=None
-    ) -> None:
+    ) -> pd.DataFrame:
         
         assert year is not None, "\"year\" param must input."
         assert not (year < 19 and year > 20)
@@ -174,10 +174,10 @@ class TimeSeriesProcessor(zconf):
         _rdf.reset_index(drop=True, inplace=True)
         
         if self.local_conf["save_pickle"]:
-            with open(self.local_conf["data_path"] + "/pkl" + f"/ts_data_{year}.pkl", "wb") as f:
+            with open(self.glob_conf["data_path"] + "/pkl" + f"/ts_data_{year}.pkl", "wb") as f:
                 pickle.dump(_rdf, f, pickle.HIGHEST_PROTOCOL)
                 
         if self.local_conf["save_csv"]:
-            _rdf.to_csv(self.local_conf["data_path"] + "/csv" + f"/ts_data_{year}.csv", sep=",")
+            _rdf.to_csv(self.glob_conf["data_path"] + "/csv" + f"/ts_data_{year}.csv", sep=",")
         
         return _rdf
