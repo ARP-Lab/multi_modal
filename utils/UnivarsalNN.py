@@ -21,5 +21,9 @@ class UniversalNN(unn, zconf):
         zconf_id: str=""
     ) -> None:
         
-        nn.Module.__init__()
+        if type == "keras":
+            super(UniversalNN, self).__init__()
+        elif type == "torch":
+            unn.__init__()
+        
         zconf.__init__(zconf_path, zconf_id)
