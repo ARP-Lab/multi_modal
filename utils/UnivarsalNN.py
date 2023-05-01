@@ -3,9 +3,10 @@ from dotenv import load_dotenv
 
 _typ = ""
 if "uni_nn_type" in os.environ:
+    load_dotenv()
     _typ = os.environ["uni_nn_type"]
     if _typ == "keras":
-        from tensorflow.keras.layers import layer as unn
+        from tensorflow.python.keras.layers import layer as unn
     elif _typ == "torch":
         from torch.nn import Module as unn
 else:

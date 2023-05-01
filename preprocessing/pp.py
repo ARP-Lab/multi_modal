@@ -1,17 +1,17 @@
+from typing import List
+import os
+
+import re
+import numpy as np
+import pandas as pd
+
+import csv
+import shutil
+
+from dfl.dfl import dfl_base, dfl_tools
+
+
 class PreProcessing(object):
-    from typing import List
-    import os
-
-    import re
-    import numpy as np
-    import pandas as pd
-
-    import csv
-    import shutil
-
-    from utils.dfl import dfl_base, dfl_tools
-
-
     def __read_csv_info(
         self,
         file_path: str=""

@@ -1,4 +1,3 @@
-import torch
 from torch import nn
 
 from utils.UnivarsalNN import UniversalNN
@@ -15,12 +14,12 @@ class MLP(UniversalNN):
         zconf_id: str=""
     ):
         
-        super().__init__(zconf_path=zconf_path, zconf_path=zconf_path)
+        super().__init__(zconf_path=zconf_path, zconf_id=zconf_id)
         
-        self.input_length = self.check_local_var("input_length", input_length)
-        self.input_width = self.check_local_var("input_width", input_width)
-        self.act_func = self.check_local_var("act_func", act_func)
-        self.last_act_off = self.check_local_var("act_func", last_act_off)
+        self.input_length = self.check_var(self.local_conf, "input_length", input_length)
+        self.input_width = self.check_var(self.local_conf, "input_width", input_width)
+        self.act_func = self.check_var(self.local_conf, "act_func", act_func)
+        self.last_act_off = self.check_var(self.local_conf, "act_func", last_act_off)
         
         _act_func = {
             "gelu" : [nn.GELU()],
@@ -64,12 +63,12 @@ class MLP(UniversalNN):
             zconf_id: str=""
         ):
             
-            super().__init__(zconf_path=zconf_path, zconf_path=zconf_path)
+            super().__init__(zconf_path=zconf_path, zconf_id=zconf_id)
             
-            self.fl_val = self.check_local_var("fl_val", fl_val)
-            self.sl_val = self.check_local_var("sl_val", sl_val)
-            self.act_func = self.check_local_var("act_func", act_func)
-            self.last_act_off = self.check_local_var("last_act_off", last_act_off)
+            self.fl_val = self.check_var("fl_val", fl_val)
+            self.sl_val = self.check_var("sl_val", sl_val)
+            self.act_func = self.check_var("act_func", act_func)
+            self.last_act_off = self.check_var("last_act_off", last_act_off)
             
             _act_func = {
                 "gelu" : [nn.GELU()],

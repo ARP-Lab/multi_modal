@@ -1,8 +1,6 @@
 import warnings
 warnings.filterwarnings('ignore')
 
-import os
-
 from typing import Union, Tuple
 import math
 import random
@@ -10,15 +8,14 @@ import random
 import pandas as pd
 import numpy as np
 
+import torch
 from torch import nn, optim
-from torch.utils.data import Dataset, DataLoader, random_split, Subset
+from torch.utils.data import DataLoader
 from torchsummary import summary as summary
 
 from copy import deepcopy
 
 from collections import Counter
-
-from datasets import Dataset
 
 from torchmetrics import F1Score
 from sklearn.metrics import f1_score as f1_skearn
@@ -46,7 +43,7 @@ class ModelExec(zconf):
         zconf_id: str=""
     ):
         
-        super().__init__(zconf_path=zconf_path, zconf_path=zconf_path)
+        super().__init__(zconf_path=zconf_path, zconf_id=zconf_id)
         
         self.device = self.glob_conf["device"]
         

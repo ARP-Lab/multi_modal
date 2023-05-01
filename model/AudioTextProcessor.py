@@ -15,10 +15,9 @@ from datasets import (
 )
 
 from zconf.zconf import zconf
-from dfl.dfl import dfl_base, dfl_tools
+from dfl.dfl import dfl_tools
 
 import pickle
-import csv
 
 
 class AudioTextProcessor(zconf):
