@@ -11,11 +11,10 @@ import numpy as np
 from sklearn.preprocessing import StandardScaler
 from collections import Counter
 
-from utils.zconf import zconf
-from utils.dfl import dfl_base, dfl_tools
+from zconf.zconf import zconf
+from dfl.dfl import dfl_tools
 
 import pickle
-import csv
 
 
 class TimeSeriesProcessor(zconf):

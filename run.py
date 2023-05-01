@@ -2,7 +2,7 @@ import argparse
 
 import pandas as pd
 
-from preprocessing.pp import organize_data
+from preprocessing.pp import PreProcessing
 
 from model.AudioTextProcessor import AudioTextProcessor
 from model.TimeSeriesProcessor import TimeSeriesProcessor
@@ -17,7 +17,8 @@ def arg_parse():
 
 
 def data_preprocessing():
-    organize_data(root="./data")
+    _pp = PreProcessing()
+    _pp.organize_data(root="./data")
 
 
 def prepare_dataset():
@@ -44,8 +45,9 @@ def run(
 
 
 def proc():
-    arg_parse()
+    _args = arg_parse()
     data_preprocessing()
+    
     _y19_at, _y20_at, _y19_ts, _y20_ts = prepare_dataset()
     run(_y19_at, _y20_at, _y19_ts, _y20_ts)
 

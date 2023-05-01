@@ -1,4 +1,5 @@
-from model.UnivarsalNN import UniversalNN
+from utils.UnivarsalNN import UniversalNN
+
 
 class weighted_MSELoss(UniversalNN):
     def __init__(

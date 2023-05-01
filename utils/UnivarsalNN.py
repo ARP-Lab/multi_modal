@@ -1,17 +1,18 @@
 import os
 from dotenv import load_dotenv
 
-type = ""
+_typ = ""
 if "uni_nn_type" in os.environ:
-    type = os.environ["uni_nn_type"]
-    if type == "keras":
-        from tensorflow.keras.layers import layer as unn
-    elif type == "torch":
+    load_dotenv()
+    _typ = os.environ["uni_nn_type"]
+    if _typ == "keras":
+        from tensorflow.python.keras.layers import layer as unn
+    elif _typ == "torch":
         from torch.nn import Module as unn
 else:
     raise AssertionError("\"uni_nn_type\" not found") 
         
-from utils.zconf import zconf
+from zconf.zconf import zconf
 
 
 class UniversalNN(unn, zconf):
@@ -21,5 +22,9 @@ class UniversalNN(unn, zconf):
         zconf_id: str=""
     ) -> None:
         
-        nn.Module.__init__()
+        if _typ == "keras":
+            super(UniversalNN, self).__init__()
+        elif _typ == "torch":
+            unn.__init__()
+        
         zconf.__init__(zconf_path, zconf_id)

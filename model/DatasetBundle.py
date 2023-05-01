@@ -1,5 +1,6 @@
 from datasets import Dataset
 
+
 class EtriDataset(Dataset):
     def __init__(
         self,

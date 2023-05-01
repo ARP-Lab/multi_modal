@@ -1,4 +1,5 @@
-# save_model: False
+save:
+  save_model: False
 padding_legnth: 50
 sample_ramdom_k: 8
 lr: 1e-3

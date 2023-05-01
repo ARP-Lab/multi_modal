@@ -1,8 +1,8 @@
 import torch
 from torch import nn
 
-from model.UnivarsalNN import UniversalNN
 from model.MLP import MLP
+from utils.UnivarsalNN import UniversalNN
 
 
 class TensorFusionMixer(UniversalNN):
@@ -22,23 +22,23 @@ class TensorFusionMixer(UniversalNN):
         
         self.ModelA = ModelA
         self.ModelB = ModelB
-        self.ModelMLP_fin = MLP(
-            conf_path=zconf_path,
-            input_length=self.local_conf["mlp_input_length"],
-            input_width=self.local_conf["mlp_input_width"]
-        ).to(self.glob_conf["device"])
+        self.ModelC = ModelC
+        self.ModelD = ModelD
+        self.ModelE = ModelE
+        self.Model_cnn_final = ModelF
         self.softmax = nn.Softmax(dim=self.local_conf["softmax_dim"])
         
     
     def _tensor_fusion(
         self,
         batch_arr1,
-        batch_arr2
+        batch_arr2,
+        batch_arr3
     ) -> torch.Tensor:
         
         _fml = []
     
-        for i, (arr1, arr2, arr3) in enumerate(zip(batch_arr1, batch_arr2, batch_arr3)):
+        for (arr1, arr2, arr3) in zip(batch_arr1, batch_arr2, batch_arr3):
             
             arr1 = arr1.unsqueeze(0).unsqueeze(0)
             arr2 = arr2.unsqueeze(0).unsqueeze(-1)
@@ -52,20 +52,26 @@ class TensorFusionMixer(UniversalNN):
 
         _fm = torch.concat(_fml)
 
-        return fusion__fmmatrix
+        return _fm
     
         
     def forward(
         self,
         x1,
-        x2
+        x2,
+        x3,
+        x4
     ):
         y1 = self.ModelA(x1)
         y2 = self.ModelB(x2)
+        y3 = self.ModelA(x3)
+        y4 = self.ModelB(x4)
+        y5 = torch.concat([y3, y4], dim=1)
+        y = self.ModelE(y5)
         
-        y = self._tensor_fusion(y1, y2) 
+        y = self._tensor_fusion(y1, y2, y5)
         
-        y = self.ModelMLP_fin(y)
+        y = self.Model_cnn_final(y)
         y = self.softmax(y)
         
         return y     

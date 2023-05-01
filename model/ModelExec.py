@@ -1,8 +1,6 @@
 import warnings
 warnings.filterwarnings('ignore')
 
-import os
-
 from typing import Union, Tuple
 import math
 import random
@@ -10,15 +8,14 @@ import random
 import pandas as pd
 import numpy as np
 
+import torch
 from torch import nn, optim
-from torch.utils.data import Dataset, DataLoader, random_split, Subset
+from torch.utils.data import DataLoader
 from torchsummary import summary as summary
 
 from copy import deepcopy
 
 from collections import Counter
-
-from datasets import Dataset
 
 from torchmetrics import F1Score
 from sklearn.metrics import f1_score as f1_skearn
@@ -27,7 +24,7 @@ from sklearn.metrics import precision_score as precision_sklearn
 
 from prettytable import PrettyTable
 
-from utils.zconf import zconf
+from zconf.zconf import zconf
 import wandb
 
 from model.DatasetBundle import EtriDataset
@@ -46,7 +43,7 @@ class ModelExec(zconf):
         zconf_id: str=""
     ):
         
-        super().__init__(zconf_path=zconf_path, zconf_path=zconf_path)
+        super().__init__(zconf_path=zconf_path, zconf_id=zconf_id)
         
         self.device = self.glob_conf["device"]
         
@@ -587,8 +584,8 @@ class ModelExec(zconf):
             print(f"---------------Epoch {epoch+1}----------------")
             self.__train(train_dataloader, model_tf_cnn_mixer, loss_fn, optimizer)
             
-            f1_score, f1_score_weighted, accuracy, loss,
-            recall_score, recall_score_weighted,
+            f1_score, f1_score_weighted, accuracy, loss, \
+            recall_score, recall_score_weighted, \
             precision_score, precision_score_weighted = self.__test(
                 validation_dataloader, model_tf_cnn_mixer, loss_fn, mode='val')
             
@@ -637,5 +634,6 @@ class ModelExec(zconf):
         wandb.finish()
         print("Done!", f"best f1_score: {best_f1}, f1_weighted: {best_f1_weighted} | best accuracy: {best_acc}")
         
-        if self.local_conf["save_model"]:
-            torch.save(best_f1_model, PATH_f1)
+        if self.check_var(self.local_conf, "save", True) is not None:
+            _sc = f"{best_f1:.2f}"
+            torch.save(best_f1_model, self.glob_conf["data_path"] + "/saved_model" + f"model_multilabel_{int(_sc) * 1000}.pt")

@@ -1,7 +1,8 @@
 import torch
 from torch import nn
 
-from model.UnivarsalNN import UniversalNN
+from utils.UnivarsalNN import UniversalNN
+
 
 class CNN_TS_First(UniversalNN):
     def __init__(
@@ -71,11 +72,11 @@ class CNN_TensorFusionMixer(UniversalNN):
         zconf_id: str=""
     ):
         
-        super().__init__(zconf_path=zconf_path, zconf_path=zconf_path)
+        super().__init__(zconf_path=zconf_path, zconf_id=zconf_id)
         
         self.backbone_seq = [
             nn.Conv2d(**self.local_conf["conv1d_conf"][1]),
-            n.LeakyReLU(),
+            nn.LeakyReLU(),
             nn.MaxPool2d(self.local_conf["MaxPool2d_conf"]),
             nn.Conv2d(**self.local_conf["conv1d_conf"][2]),
             nn.LeakyReLU(),

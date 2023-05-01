@@ -49,6 +49,8 @@ torchviz = "^0.0.2"
 torcheval = "^0.0.6"
 prettytable = "^3.7.0"
 python-dotenv = "^1.0.0"
+pyzconf = "^0.1.0"
+pydfl = "^0.1.0"
 
 [tool.poetry.group.dev.dependencies]
 ipykernel = "^6.21.3"
