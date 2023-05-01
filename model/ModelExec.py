@@ -635,4 +635,5 @@ class ModelExec(zconf):
         print("Done!", f"best f1_score: {best_f1}, f1_weighted: {best_f1_weighted} | best accuracy: {best_acc}")
         
         if self.check_var(self.local_conf, "save", True) is not None:
-            torch.save(best_f1_model, self.glob_conf["data_path"] + "/saved_model" + f"model_multilabel_{_now_model_audio}.pkl")
+            _sc = f"{best_f1:.2f}"
+            torch.save(best_f1_model, self.glob_conf["data_path"] + "/saved_model" + f"model_multilabel_{int(_sc) * 1000}.pt")
