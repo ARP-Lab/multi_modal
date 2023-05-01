@@ -27,7 +27,7 @@ from sklearn.metrics import precision_score as precision_sklearn
 
 from prettytable import PrettyTable
 
-from utils.zconf import zconf
+from zconf.zconf import zconf
 import wandb
 
 from model.DatasetBundle import EtriDataset
@@ -637,5 +637,5 @@ class ModelExec(zconf):
         wandb.finish()
         print("Done!", f"best f1_score: {best_f1}, f1_weighted: {best_f1_weighted} | best accuracy: {best_acc}")
         
-        if self.local_conf["save_model"]:
-            torch.save(best_f1_model, PATH_f1)
+        if self.check_var(self.local_conf, "save", True) is not None:
+            torch.save(best_f1_model, self.glob_conf["data_path"] + "/saved_model" + f"model_multilabel_{_now_model_audio}.pkl")
