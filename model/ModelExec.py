@@ -584,8 +584,8 @@ class ModelExec(zconf):
             print(f"---------------Epoch {epoch+1}----------------")
             self.__train(train_dataloader, model_tf_cnn_mixer, loss_fn, optimizer)
             
-            f1_score, f1_score_weighted, accuracy, loss,
-            recall_score, recall_score_weighted,
+            f1_score, f1_score_weighted, accuracy, loss, \
+            recall_score, recall_score_weighted, \
             precision_score, precision_score_weighted = self.__test(
                 validation_dataloader, model_tf_cnn_mixer, loss_fn, mode='val')
             
