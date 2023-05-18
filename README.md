@@ -75,7 +75,7 @@
 - Kyungho Kim (khk172216@gmail.com)
 - Sooik Jo (show454@naver.com)
 - Geuncheol Oh
-- Juwon Kim
+- Juwon Kim (juwum12@naver.com)
 
 # License
 Copyright 2023. ARP Lab(Louan Lee, Doohoon Kim, Kyungho Kim, Sooik Jo, Guenchul Oh, Juwon Kim) all rights reserved.
