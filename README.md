@@ -2,12 +2,12 @@
 
 # 소스코드 확인
 - 소스 코드 실행: run.py
-- 데이터 변환
+- 데이터 변환: 
 
 ## 개별 실험 모델 확인
-- 메인 실험모델: l_model_for_classification_CNN.ipynb
-- TS 데이터 제외한 실험 모델: k_model_for_classification_CNN_nots.ipynb
-- MLP mixer 적용 실험 모델: k_model_for_classification_CNN_catMLP.ipynb
+- 메인 실험모델: experimental > l_model_for_classification_CNN.ipynb
+- TS 데이터 제외한 실험 모델: experimental > k_model_for_classification_CNN_nots.ipynb
+- MLP mixer 적용 실험 모델: experimental > k_model_for_classification_CNN_catMLP.ipynb
 
 
 ## Using VSCode
