@@ -41,11 +41,11 @@
 
 ### 2-2. 개별 실험 모델 확인(실험 및 실험 결과)
 - 메인 실험모델
-    - l_model_for_classification_CNN.ipynb
+    - experimental/l_model_for_classification_CNN.ipynb
 - TS 데이터 제외한 실험 모델
-    - k_model_for_classification_CNN_nots.ipynb
+    - experimental/k_model_for_classification_CNN_nots.ipynb
 - MLP mixer 적용 실험 모델
-    - k_model_for_classification_CNN_catMLP.ipynb
+    - experimental/k_model_for_classification_CNN_catMLP.ipynb
 
 ## 3. 사용법
 
