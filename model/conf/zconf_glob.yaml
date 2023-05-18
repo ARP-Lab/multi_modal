@@ -3,3 +3,6 @@ data_path: "./data"
 org_data_path:
   19: "./data/org_KEMDy19"
   20: "./data/org_KEMDy20"
+block_list:
+  19: []
+  20: [12, 17]

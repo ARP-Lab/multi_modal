@@ -1,5 +1,10 @@
+import warnings
+warnings.filterwarnings('ignore')
+
 from typing import List
 import re
+
+import os
 
 import pandas as pd
 
@@ -15,7 +20,7 @@ from datasets import (
 )
 
 from zconf.zconf import zconf
-from dfl.dfl import dfl_tools
+from dfl.dfl import dfl_base, dfl_tools
 
 import pickle
 
@@ -41,12 +46,12 @@ class AudioTextProcessor(zconf):
             "txt": AutoModel.from_pretrained(_txt_model_name)
         }
         
-        if self.glob_conf.device == "cuda":
+        if self.glob_conf["device"] == "cuda":
             for _i in ["wav", "txt"]:
                 # self.processor[_i] = self.processor[_i].cuda()
                 self.model[_i] = self.model[_i].cuda()
-                
-
+    
+    
     def _wav_embedding(
         self,
         wav_files: List[str]=[""]
@@ -66,7 +71,7 @@ class AudioTextProcessor(zconf):
                 padding=self.local_conf["audio_conf"]["padding"],
                 max_length=self.local_conf["audio_conf"]["max_length"],
                 truncation=self.local_conf["audio_conf"]["truncation"]
-            )
+            ).to(self.glob_conf["device"])
         
             with torch.no_grad():
                 output = self.model["wav"](**_inputs)
@@ -97,10 +102,10 @@ class AudioTextProcessor(zconf):
             padding=self.local_conf["text_conf"]["padding"],
             max_length=self.local_conf["text_conf"]["max_length"],
             truncation=self.local_conf["text_conf"]["truncation"]
-        )
+        ).to(self.glob_conf["device"])
         
         with torch.no_grad():
-            res, _ = self._txt_model(**_inputs, return_dict=False)
+            res, _ = self.model["txt"](**_inputs, return_dict=False)
         
         return res
     
@@ -120,7 +125,7 @@ class AudioTextProcessor(zconf):
         #     dfl_base.make_dir(f"{self._conf.embedding_data_path}")
                 
         anno_path = dfl_tools.find_dfl_path(
-            path, ["_eval", ".csv"],
+            f"{path}/annotation", ["_res", ".csv"],
             mode="f", cond="a",
             recur=True, only_leaf=True, res_all=True)
         
@@ -128,12 +133,12 @@ class AudioTextProcessor(zconf):
         
         for _a in anno_path:
             _all_p, _l_name = _a
-            _s_anno = _l_name.strip("_eval.csv")
-            anno = pd.read_csv(_all_p, skiprows=1)
-            f_names = anno[" .1"]
+            _s_anno = _l_name.strip("_res.csv")
+            anno = pd.read_csv(_all_p)
+            f_names = anno["Segment ID"].to_list()
             
-            txt_files = [self.glob_conf["data_path"] + "/" + _s_anno + "/"+ f + ".txt" for f in f_names]
-            wav_files = [self.glob_conf["data_path"] + "/" + _s_anno + "/"+ f + ".wav" for f in f_names]
+            txt_files = [path + "/" + _s_anno + "/"+ f + ".txt" for f in f_names]
+            wav_files = [path + "/" + _s_anno + "/"+ f + ".wav" for f in f_names]
             
             _txt_embed = self._txt_embedding(txt_files=txt_files)
             _wav_embed = self._wav_embedding(wav_files=wav_files)
@@ -156,13 +161,23 @@ class AudioTextProcessor(zconf):
             _now_model_text = _now_model_text[0] if len(_now_model_text) < 2 else _now_model_text[1]
             
             if self.local_conf["save_pickle"]:
-                with open(self.glob_conf["data_path"] + "/pkl" + f"/{_s_anno}_AudioText_{_now_model_audio}_.pkl", "wb") as f:
+                _save_pkl_dir = self.glob_conf["data_path"] + "/pkl"
+            
+                if not os.path.exists(_save_pkl_dir):
+                    dfl_base.make_dir(self.glob_conf["data_path"], "pkl")
+                    
+                with open(_save_pkl_dir + f"/{_s_anno}_AudioText_{_now_model_audio}_.pkl", "wb") as f:
                     pickle.dump(_td, f, pickle.HIGHEST_PROTOCOL)
                     
-            if self.local_conf["save_pickle"]:
+            if self.local_conf["save_csv"]:
+                _save_csv_dir = self.glob_conf["data_path"] + "/csv"
+            
+                if not os.path.exists(_save_csv_dir):
+                    dfl_base.make_dir(self.glob_conf["data_path"], "csv")
+                    
                 _tdf = pd.DataFrame.from_dict(_td, orient='index')
-                _tdf.to_csv(self.glob_conf["data_path"] + "/csv" + f"{_s_anno}_AudioText_{_now_model_audio}.csv", sep=",")
+                _tdf.to_csv(_save_csv_dir + f"{_s_anno}_AudioText_{_now_model_audio}.csv", sep=",")
             
             data[_s_anno] = _td
-                
+    
         return data

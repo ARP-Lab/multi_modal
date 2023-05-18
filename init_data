@@ -43,5 +43,7 @@ if [ $res -eq 0 ]; then
     if [ ! -f "./${data[1]}" ]; then
         download_data ${data[1]} ${data[2]}
     fi
+    
     decompress_data ${data[0]} ${data[1]}
+    
 fi
