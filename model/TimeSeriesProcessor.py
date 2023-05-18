@@ -1,6 +1,8 @@
 import warnings
 warnings.filterwarnings('ignore')
 
+import os
+
 import itertools
 from itertools import accumulate
 import re
@@ -12,7 +14,7 @@ from sklearn.preprocessing import StandardScaler
 from collections import Counter
 
 from zconf.zconf import zconf
-from dfl.dfl import dfl_tools
+from dfl.dfl import dfl_base, dfl_tools
 
 import pickle
 
@@ -48,7 +50,11 @@ class TimeSeriesProcessor(zconf):
         _anno_path = []
         
         for _s in _res_path:
-            _p, _ = _s
+            _p, _x = _s
+            
+            if _x in self.glob_conf["block_list"][year]:
+                continue
+            
             if _p.find("anno") == -1:
                 _sess_path.append(_p)
             else:
@@ -103,7 +109,10 @@ class TimeSeriesProcessor(zconf):
                     for _sp in ["EDA", "TEMP"]:
                         _l = sum(_rx[_sp].to_list(), [])
                         
-                        # using Standardscale for make scaled EDA and TEMP
+                        if year == 20 and _sp == "EDA":
+                            _l = [_l[i] - _l[i - 1] for i in range(1, len(_l))]
+                        
+                        # using Standard scale for make scaled EDA and TEMP
                         _sc = StandardScaler()
                         _tv = list(itertools.chain(*_sc.fit_transform(np.array(_l).reshape(-1, 1)).reshape(1,-1).tolist()))
                         _len_list = _rx[f"{_sp} length"].to_list()
@@ -173,10 +182,20 @@ class TimeSeriesProcessor(zconf):
         _rdf.reset_index(drop=True, inplace=True)
         
         if self.local_conf["save_pickle"]:
-            with open(self.glob_conf["data_path"] + "/pkl" + f"/ts_data_{year}.pkl", "wb") as f:
+            _save_pkl_dir = self.glob_conf["data_path"] + "/pkl"
+            
+            if not os.path.exists(_save_pkl_dir):
+                dfl_base.make_dir(self.glob_conf["data_path"], "pkl")
+                
+            with open(_save_pkl_dir + f"/ts_data_{year}.pkl", "wb") as f:
                 pickle.dump(_rdf, f, pickle.HIGHEST_PROTOCOL)
                 
         if self.local_conf["save_csv"]:
-            _rdf.to_csv(self.glob_conf["data_path"] + "/csv" + f"/ts_data_{year}.csv", sep=",")
+            _save_csv_dir = self.glob_conf["data_path"] + "/csv"
+            
+            if not os.path.exists(_save_csv_dir):
+                dfl_base.make_dir(self.glob_conf["data_path"], "csv")
+                
+            _rdf.to_csv(_save_csv_dir + f"/ts_data_{year}.csv", sep=",")
         
         return _rdf

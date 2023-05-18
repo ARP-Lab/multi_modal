@@ -11,8 +11,7 @@ class CNN_TS_First(UniversalNN):
         zconf_id: str=""
     ):
         
-        super().__init__(zconf_path=zconf_path, zconf_path=zconf_path)
-        
+        super().__init__(zconf_path=zconf_path, zconf_id=zconf_id)
         
         self.backbone_seq = [
             nn.Conv1d(**self.local_conf["conv1d_conf"][1]),

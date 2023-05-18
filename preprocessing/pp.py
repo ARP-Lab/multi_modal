@@ -8,10 +8,20 @@ import pandas as pd
 import csv
 import shutil
 
+from zconf.zconf import zconf
 from dfl.dfl import dfl_base, dfl_tools
 
 
-class PreProcessing(object):
+class PreProcessing(zconf):
+    def __init__(
+        self,
+        zconf_path: str="",
+        zconf_id: str=""
+    ):
+        
+        super().__init__(zconf_path=zconf_path, zconf_id=zconf_id)
+        
+        
     def __read_csv_info(
         self,
         file_path: str=""
@@ -53,42 +63,43 @@ class PreProcessing(object):
                 
                 # Directory path form name is as like "KEMDy19/EDA/Session01/Original/Sess01F.csv"
                 # Directory path form name is as like "KEMDy20/EDA/Session01/Sess01_script01_User001F.csv"
-                _t_df = self.__read_csv_info(
-                    f"./{_td[0]}/{_td[1]}/{session_name}/"
-                    + "Original/" if year == 19 else "" + f"{_f}")
+                _path = f"./{'/'.join([_td[i] for i in range(1, len(_td))])}/{session_name}/" # {_td[1]}/{_td[2]}/{_td[3]}
+                _path += "Original/" if year == 19 else ""
+                _t_df = self.__read_csv_info(_path + f"{_f}")
+                _ref_col_str = _td[3]
                 
                 if year == 19:
                     _s_inv = "F" if _f.find("M") > 0 else "M"
                     
                     # processing for exceptional cases
-                    _fds[_td[1]] = _t_df[_t_df[3].str.contains(_s_inv) == False]
+                    _fds[_ref_col_str] = _t_df[_t_df[3].str.contains(_s_inv) == False]
                                 
-                    if _td[1] == "ECG":
-                        _fds[_td[1]] = _fds[_td[1]].drop(columns=_fds[_td[1]].columns[0])
+                    if _ref_col_str == "ECG":
+                        _fds[_ref_col_str] = _fds[_ref_col_str].drop(columns=_fds[_ref_col_str].columns[0])
                     else:
-                        _fds[_td[1]] = _fds[_td[1]].drop(columns=_fds[_td[1]].columns[1])
-                    _fds[_td[1]] = _fds[_td[1]].T.reset_index(drop=True).T
+                        _fds[_ref_col_str] = _fds[_ref_col_str].drop(columns=_fds[_ref_col_str].columns[1])
+                    _fds[_ref_col_str] = _fds[_ref_col_str].T.reset_index(drop=True).T
                     
                 elif year == 20:
-                    _fds[_td[1]] = _t_df
+                    _fds[_ref_col_str] = _t_df
                     
-                    if not _fds[_td[1]].empty:
-                        if _td[1] == "EDA" or _td[1] == "TEMP":
-                            _fds[_td[1]] = _fds[_td[1]].drop(1) 
-                        _fds[_td[1]] = _fds[_td[1]].drop(0)
+                    if not _fds[_ref_col_str].empty:
+                        if _ref_col_str == "EDA" or _ref_col_str == "TEMP":
+                            _fds[_ref_col_str] = _fds[_ref_col_str].drop(1) 
+                        _fds[_ref_col_str] = _fds[_ref_col_str].drop(0)
                         
-                        if _td[1] == "IBI":
-                            _fds[_td[1]] = _fds[_td[1]].drop(columns=_fds[_td[1]].columns[0])
+                        if _ref_col_str == "IBI":
+                            _fds[_ref_col_str] = _fds[_ref_col_str].drop(columns=_fds[_ref_col_str].columns[0])
                             # reset a column index 
-                            _fds[_td[1]] = _fds[_td[1]].T.reset_index(drop=True).T
+                            _fds[_ref_col_str] = _fds[_ref_col_str].T.reset_index(drop=True).T
                             
                         # drop the rows if has None
-                        _fds[_td[1]] = _fds[_td[1]].dropna()
+                        _fds[_ref_col_str] = _fds[_ref_col_str].dropna()
                         
-                        _fds[_td[1]] = _fds[_td[1]].reset_index(drop=True)
+                        _fds[_ref_col_str] = _fds[_ref_col_str].reset_index(drop=True)
                     else:
-                        if _td[1] == "IBI":
-                            _fds[_td[1]] = pd.DataFrame({"IBI": [None], "timestamp": [None], "sid": [None]})
+                        if _ref_col_str == "IBI":
+                            _fds[_ref_col_str] = pd.DataFrame({"IBI": [None], "timestamp": [None], "sid": [None]})
             
             # ** for check data
             # for x in target_dir_list:
@@ -141,6 +152,7 @@ class PreProcessing(object):
         # print(result.to_string())
         
         return res
+    
 
     def __org_preprocessed_data(
         self,
@@ -151,62 +163,45 @@ class PreProcessing(object):
         assert root != ""
         assert not (year < 19 and year > 20)
         
-        os.system(f"./init y{year}")
+        os.system(f"./init_data y{year}")
         
         dir_name = f"KEMDy{year}"
         
         _y_num = re.findall(r"\d+", dir_name)
-        _y_num = _y_num[0]
+        _y_num = int(_y_num[0])
         origin_dp = f"{root}/{dir_name}"
         org_dp = f"{root}/org_{dir_name}"
 
         # make wav directory to root
         dfl_base.make_dir(".", org_dp)
 
-        _wd = dfl_tools.find_dfl_path(f"./{dir_name}", ["wav"], mode="d", only_leaf="True")
+        _wd = dfl_tools.find_dfl_path(f"{root}/{dir_name}", ["wav"], mode="d", only_leaf="True")
         _sl = dfl_tools.find_dfl_path(f"{_wd[0]}", [""], mode="d", only_leaf="True", res_all=True)
 
+        # move the wav data
         for l, r in _sl:
             dfl_base.make_dir(f"./{org_dp}", r)
-            _ssl = dfl_tools.find_dfl_path(f"{l}", [""], mode="d", only_leaf="True")
-            
             _mv_path = f"./{org_dp}/{r}"
             
-            for _d in _ssl:
-                _fl = dfl_tools.find_dfl_path(_d, [""], mode="f", only_leaf="True")
+            if _y_num == 19:
+                _ssl = dfl_tools.find_dfl_path(f"{l}", [""], mode="d", only_leaf="True")
+                
+                for _d in _ssl:
+                    _fl = dfl_tools.find_dfl_path(_d, [""], mode="f", only_leaf="True")
+                    for f in _fl:
+                        shutil.move(f, _mv_path)
+            else:
+                _fl = dfl_tools.find_dfl_path(l, [""], mode="f", only_leaf="True")
                 for f in _fl:
                     shutil.move(f, _mv_path)
 
         src_ap = os.path.join(os.getcwd(), f"{origin_dp}/annotation")
         dest_ap = os.path.join(os.getcwd(), f"{org_dp}/annotation")
 
+        if os.path.exists(dest_ap):
+            shutil.rmtree(dest_ap)
         shutil.copytree(src_ap, dest_ap)
 
-        target_dir_list = ["EDA", "ECG" if year == 19 else "IBI", "TEMP"]
-
-        sd_list = []
-
-        for _td in target_dir_list:
-            _sdl = dfl_tools.find_dfl_path(f"./{origin_dp}/{_td}", ["Session"], mode="d", only_leaf=True, res_all=True)
-            sd_list += [x[1] for x in _sdl]
-            sd_list = list(set(sd_list))
-
-        sd_list = sorted(sd_list)
-
-        for _sn in sd_list:
-            _tf = []
-            
-            for _td in target_dir_list:
-                _sfl = dfl_tools.find_dfl_path(f"./{origin_dp}/{_td}/{_sn}", [""], mode="f", recur=True, only_leaf=True, res_all=True)
-                _tf += [x[1] for x in _sfl]
-                
-            _tf = list(set(_tf))
-            _tf = sorted(_tf)
-            
-            _smd = self.__make_merged_data([f"{origin_dp}/{x}" for x in target_dir_list], _tf, _sn, _y_num)
-            _smd.to_csv(f"{org_dp}/{_sn}/{_sn}.csv", sep=",", na_rep="NaN")
-        
-        
         # Doing after post-processing for exception on KEMDy19, 20 annotation datasets.
         _x = dfl_tools.find_dfl_path(
             f"{org_dp}/annotation", [".csv"],
@@ -226,14 +221,13 @@ class PreProcessing(object):
                 _p, _fn = _j
                 
                 _an = pd.read_csv(_p, index_col=0, skiprows=1)
-                _an.rename(columns={"Unnamed: 9" if int(_y_num) == 19 else " .1" : "Segment ID"},
+                _an.rename(columns={"Unnamed: 9" if _y_num == 19 else " .1" : "Segment ID"},
                         inplace=True)
-                _an = _an[_an.columns[8 if int(_y_num) == 19 else 3:]]
+                _an = _an[_an.columns[8 if _y_num == 19 else 2:]]
                 _an.reset_index(drop=True, inplace=True)
-                # print(_an)
                     
                 # 결국 수정할 것들은 다음과 같다.
-                if int(_y_num) == 19:
+                if _y_num == 19:
                     if _n == "03" and _fn.find("F"):
                         # Sess03_impro02_M001(여자쪽, 345) 수정
                         _t_row = _an.loc[_an["Segment ID"] == "Sess03_impro02_M001", "Segment ID"]
@@ -255,7 +249,7 @@ class PreProcessing(object):
                     _rdf = pd.concat([_rdf, _empty_df], axis=1)
                     _rdf.set_index(keys=["Segment ID"], inplace=True, drop=False)
                 
-                if int(_y_num) == 19:
+                if _y_num == 19:
                     _sx = ""
                     
                     if _fn.find("M") > -1: _sx = "F"
@@ -272,11 +266,46 @@ class PreProcessing(object):
             
             for _p, _ in _res_files:
                 os.remove(_p)
+                
+        # Doing after post-processing for exception on KEMDy19, 20 session datasets.
+        target_dir_list = ["EDA", "ECG" if year == 19 else "IBI", "TEMP"]
+        _anno_list = dfl_tools.find_dfl_path(f"{org_dp}/annotation/", [""], mode="f", recur=True, only_leaf=True, res_all=True)
+        _anno_list = {_y.replace("_res.csv", ""):_x for _x, _y in _anno_list if _y not in self.glob_conf["block_list"][_y_num]}
+
+        sd_list = []
+
+        for _td in target_dir_list:
+            _sdl = dfl_tools.find_dfl_path(f"./{origin_dp}/{_td}", ["Session"], mode="d", only_leaf=True, res_all=True)
+            sd_list += [x[1] for x in _sdl]
+            sd_list = list(set(sd_list))
+
+        sd_list = sorted(sd_list)
+
+        for _sn in sd_list:
+            if _sn not in _anno_list:
+                continue
+            
+            _tf = []
+            
+            for _td2 in target_dir_list:
+                _sfl = dfl_tools.find_dfl_path(f"./{origin_dp}/{_td2}/{_sn}", [""], mode="f", recur=True, only_leaf=True, res_all=True)
+                _tf += [x[1] for x in _sfl]
+                
+            _tf = list(set(_tf))
+            _tf = sorted(_tf)
+            
+            _smd = self.__make_merged_data([f"{origin_dp}/{x}" for x in target_dir_list], _tf, _sn, _y_num)
+            # Get annotaion data
+            _rdf = pd.read_csv(_anno_list[_sn], index_col=0)
+            # Check two lable check if Session "Segment ID" equal to Annotation "Segment ID"
+            _smd = _smd[_smd["sid"].isin(_rdf["Segment ID"].to_list())]
+            _smd.to_csv(f"{org_dp}/{_sn}/{_sn}.csv", sep=",", na_rep="NaN")
 
             
     def organize_data(
         self,
-        root: str=""
+        root: str="",
+        
     ) -> None:
         assert root != ""
         
@@ -284,3 +313,11 @@ class PreProcessing(object):
         
         for _y in years:
             self.__org_preprocessed_data(root=root, year=_y)
+        
+            
+    def test_org(
+        self,
+        root: str=""
+    ) -> None:
+        
+        self.__org_preprocessed_data(root=root, year=20)

@@ -1,8 +1,8 @@
-save_pickle: False
-save_csv: False
+save_pickle: True
+save_csv: True
 pre_trained:
   audio_model: "facebook/data2vec-audio-large-960h"
-  text_model: "BM-K/KoSimCSE-bert-multitask"
+  text_model: "Junmai/KR-Data2VecText-v1"
 audio_conf:
   return_tensors: "pt"
   return_attention_mask: true

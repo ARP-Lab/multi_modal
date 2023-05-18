@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 
-from model.MLP import MLP
+# from model.MLP import MLP
 from utils.UnivarsalNN import UniversalNN
 
 
@@ -62,12 +62,13 @@ class TensorFusionMixer(UniversalNN):
         x3,
         x4
     ):
+        
         y1 = self.ModelA(x1)
         y2 = self.ModelB(x2)
-        y3 = self.ModelA(x3)
-        y4 = self.ModelB(x4)
+        y3 = self.ModelC(x3)
+        y4 = self.ModelD(x4)
         y5 = torch.concat([y3, y4], dim=1)
-        y = self.ModelE(y5)
+        y5 = self.ModelE(y5)
         
         y = self._tensor_fusion(y1, y2, y5)
         

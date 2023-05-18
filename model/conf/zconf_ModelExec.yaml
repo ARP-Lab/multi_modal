@@ -5,18 +5,19 @@ sample_ramdom_k: 8
 lr: 1e-3
 weight_decay: 0.005
 diff_threshold: 0.083
+train_batch_size: 512
+val_batch_size: 128
+test_batch_size: 128
 epochs: 15
 f1_score_conf:
   task: "multiclass"
   num_classes: 37
 y19:
   anno_length: 20
-  except:
-    - 12
-    - 17
+  except: [12, 17]
 y20:
   anno_length: 40
-  except:
+  except: []
 encode_dict:
   angry: 0
   disgust: 1
@@ -51,7 +52,8 @@ encode_dict:
   disgust;fear: 120
   disgust;happy: 130
   disgust;neutral;surprise: 1450
-  disgust;sad: 160, disgust;surprise: 150
+  disgust;sad: 160
+  disgust;surprise: 150
   fear;neutral;surprise: 2450
   fear;sad: 260
   fear;surprise: 250

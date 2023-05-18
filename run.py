@@ -18,7 +18,7 @@ def arg_parse():
 
 def data_preprocessing():
     _pp = PreProcessing()
-    _pp.organize_data(root="./data")
+    _pp.organize_data(root="./data", block_list=[])
 
 
 def prepare_dataset():
@@ -46,9 +46,13 @@ def run(
 
 def proc():
     _args = arg_parse()
-    data_preprocessing()
     
+    # 1-1
+    data_preprocessing()
+    # 1-2
     _y19_at, _y20_at, _y19_ts, _y20_ts = prepare_dataset()
+    
+    # 2
     run(_y19_at, _y20_at, _y19_ts, _y20_ts)
 
 

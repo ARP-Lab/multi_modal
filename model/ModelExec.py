@@ -12,6 +12,7 @@ import torch
 from torch import nn, optim
 from torch.utils.data import DataLoader
 from torchsummary import summary as summary
+import torch.nn.functional as F
 
 from copy import deepcopy
 
@@ -92,7 +93,7 @@ class ModelExec(zconf):
     def __session_pick(
         self,
         year: int=None
-    ) -> Tuple[list, list, list] :
+    ) -> Tuple[list, list, list]:
         
         # session을 train vs test&val로 나눠줌
         _sl = ['Sess0' + str(i + 1) if i < 9 else 'Sess' + str(i + 1) for i in range(40)]
@@ -215,7 +216,7 @@ class ModelExec(zconf):
                         label_emotion, label_emotion_vec, label_arousal, label_valence) in enumerate(dataloader): 
             y = label_emotion_vec # 라벨을 변경하고자 하면 이 변수만 바꿔주면 나머지는 y로 적용
             # 예측 오류 계산 
-            X_txt, X_wav, X_temp, X_eda, y = X_txt.to(self.device), X_wav.to(self.device), X_temp.to(self.device), X_eda.to(self.device),y.type(torch.float32).to(self.device)
+            X_txt, X_wav, X_temp, X_eda, y = X_txt.to(self.device), X_wav.to(self.device), X_temp.to(self.device), X_eda.to(self.device), y.type(torch.float32).to(self.device)
             
             X_temp = X_temp.unsqueeze(dim=-1)
             X_eda = X_eda.unsqueeze(dim=-1)
@@ -285,18 +286,21 @@ class ModelExec(zconf):
         test_loss /= num_batches
         correct /= size
         # f1_score = f1(torch.cat(preds).to(device), torch.cat(targets).to(device))
+        _y_preds = torch.cat(preds).detach().cpu().numpy()
+        _y_targes = torch.cat(targets).detach().cpu().numpy()
+        
         recall_score = \
-            recall_sklearn(torch.cat(preds).detach().cpu().numpy(), torch.cat(targets).detach().cpu().numpy(), average="micro")
+            recall_sklearn(_y_preds, _y_targes, average="micro")
         recall_score_weighted = \
-            recall_sklearn(torch.cat(preds).detach().cpu().numpy(), torch.cat(targets).detach().cpu().numpy(), average="weighted")
+            recall_sklearn(_y_preds, _y_targes, average="weighted")
         precision_score = \
-            precision_sklearn(torch.cat(preds).detach().cpu().numpy(), torch.cat(targets).detach().cpu().numpy(), average="micro")
+            precision_sklearn(_y_preds, _y_targes, average="micro")
         precision_score_weighted = \
-            precision_sklearn(torch.cat(preds).detach().cpu().numpy(), torch.cat(targets).detach().cpu().numpy(), average="weighted")
+            precision_sklearn(_y_preds, _y_targes, average="weighted")
         f1_score_weighted = \
-            f1_skearn(torch.cat(preds).detach().cpu().numpy(), torch.cat(targets).detach().cpu().numpy(), average="weighted")
+            f1_skearn(_y_preds, _y_targes, average="weighted")
         f1_score = \
-            f1_skearn(torch.cat(preds).detach().cpu().numpy(), torch.cat(targets).detach().cpu().numpy(), average="micro")
+            f1_skearn(_y_preds, _y_targes, average="micro")
         accuracy = (100 * correct)
         
         if mode == "test":
@@ -318,8 +322,6 @@ class ModelExec(zconf):
         anno_data_20: pd.DataFrame,
         save_model: bool=False
     ):
-        
-        self.act_func = self.local_conf["act_func"] if self.local_conf["act_func"] != None else act_func
         
         encode_dict = self.local_conf["encode_dict"]
         
@@ -350,7 +352,7 @@ class ModelExec(zconf):
         emb_20_test = self.__get_data_by_session(emb_data_20, _test_20)
         emb_20_val = self.__get_data_by_session(emb_data_20, _val_20)
         
-        target_neutral_num = Counter(kemdy20_annot_train['Emotion'])[4]
+        target_neutral_num = Counter(annot_20_train['Emotion'])[4]
 
         target_neutral_num_19 = 0
         # target_neutral_num_19 = int(target_neutral_num / (Counter(kemdy19_annot['Emotion'])[4] + Counter(kemdy20_annot['Emotion'])[4]) * Counter(kemdy19_annot['Emotion'])[4])
@@ -390,8 +392,8 @@ class ModelExec(zconf):
         # annot_test_final = pd.concat([kemdy19_annot_test, kemdy20_annot_test])
         # annot_val_final = pd.concat([kemdy19_annot_val, kemdy20_annot_val])
 
-        annot_test_final = pd.concat([kemdy20_annot_test])
-        annot_val_final = pd.concat([kemdy20_annot_val])
+        annot_test_final = pd.concat([annot_20_test])
+        annot_val_final = pd.concat([annot_20_val])
 
 
         annot_train_final.reset_index(drop=True, inplace=True)
@@ -470,11 +472,16 @@ class ModelExec(zconf):
                             Temp=torch.Tensor(annot_val_final['Scaled TEMP']), 
                             Emotion_vec=torch.Tensor(annot_val_final['emotion_vector']))
         
-        train_dataloader = DataLoader(dataset_train, batch_size=512, shuffle=True, drop_last=True)
-        validation_dataloader = DataLoader(dataset_val, batch_size=128, shuffle=True, drop_last=True)
-        test_dataloader = DataLoader(dataset_test, batch_size=128, shuffle=True, drop_last=True)
+        train_dataloader = DataLoader(
+            dataset_train, batch_size=self.local_conf["train_batch_size"], shuffle=True, drop_last=True
+        )
+        validation_dataloader = DataLoader(
+            dataset_val, batch_size=self.local_conf["val_batch_size"], shuffle=True, drop_last=True
+        )
+        test_dataloader = DataLoader(
+            dataset_test, batch_size=self.local_conf["test_batch_size"], shuffle=True, drop_last=True
+        )
         
-        # txt_input_length, txt_input_width = raw_dataset[session]['textembeddings'][0].shape | 마지막엔 지울 것
         # , wav_input_length, wav_input_width = raw_dataset[session]['wav_embeddings'][0].shape
         txt_input_length, txt_input_width = torch.Tensor(emb_train_final['txt'][0]).shape
         wav_input_length, wav_input_width = torch.Tensor(emb_train_final['wav'][0]).shape
@@ -535,7 +542,7 @@ class ModelExec(zconf):
         
         lr = self.local_conf["lr"]
 
-        optimizer = optim.Adam(model_tf_cnn_mixer.parameters(), lr=lr, weight_decay=0.005)
+        optimizer = optim.Adam(model_tf_cnn_mixer.parameters(), lr=lr, weight_decay=self.local_conf["weight_decay"])
         scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min')
         
         wandb.login()
@@ -550,12 +557,12 @@ class ModelExec(zconf):
             # track hyperparameters and run metadata
             config={
                 "learning_rate": lr,
-                "architecture": "CNN Tensor Fusion Mixer",
+                "architecture": "Tensor Fusion-Mixer(CNN)",
                 "dataset": "ETRI Kemdy20",
                 "epochs": epochs,
                 "Optimizer": optimizer.__class__.__name__,
                 "Loss": loss_fn.__class__.__name__,
-                "multi label threshold": multi_label_threshold,
+                "multi label threshold": self.local_conf["diff_threshold"],
             }
         )
         
