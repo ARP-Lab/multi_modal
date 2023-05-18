@@ -74,7 +74,7 @@
 - Doohoon Kim (invi.dh.kim@gmail.com)
 - Kyungho Kim (khk172216@gmail.com)
 - Sooik Jo (show454@naver.com)
-- Guenchul Oh
+- Geuncheol Oh
 - Juwon Kim
 
 # License
