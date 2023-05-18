@@ -11,9 +11,12 @@ from model.ModelExec import ModelExec
 
 
 def arg_parse():
-    parser = argparse.ArgumentParser(description='')
+    _p = argparse.ArgumentParser(description="multi_modal project")
     
-    return parser.parse_args()
+    _p.add_argument('--make_data', type=bool, default=False)
+    _p.add_argument('--all', type=bool, default=True)
+    
+    return _p.parse_args()
 
 
 def data_preprocessing():
@@ -47,13 +50,15 @@ def run(
 def proc():
     _args = arg_parse()
     
-    # 1-1
-    data_preprocessing()
-    # 1-2
-    _y19_at, _y20_at, _y19_ts, _y20_ts = prepare_dataset()
-    
-    # 2
-    run(_y19_at, _y20_at, _y19_ts, _y20_ts)
+    if _args.make_data:
+        data_preprocessing()
+        _y19_at, _y20_at, _y19_ts, _y20_ts = prepare_dataset()
+        
+    elif _args.all:
+        data_preprocessing()
+        _y19_at, _y20_at, _y19_ts, _y20_ts = prepare_dataset()
+        
+        run(_y19_at, _y20_at, _y19_ts, _y20_ts)
 
 
 if __name__ == "__main__":
