@@ -105,19 +105,37 @@ class TimeSeriesProcessor(zconf):
                     
                     if _rx.empty:
                         continue
+                    
+                    _ss_list = _rx["Segment ID"].to_list()
+                    _ss_list = sorted(list(set([_[:-3 if year == 19 else -4] for _ in _ss_list])))
+                    
+                    for _ss in _ss_list:
+                        _tsp = {}
+                        _xs = _x[_x["Segment ID"].str.contains(f"{_ss}")]
+                        
+                        pass # to be continue
 
                     for _sp in ["EDA", "TEMP"]:
-                        _l = sum(_rx[_sp].to_list(), [])
                         
-                        if year == 20 and _sp == "EDA":
-                            _l = [_l[i] - _l[i - 1] for i in range(1, len(_l))]
-                        
-                        # using Standard scale for make scaled EDA and TEMP
-                        _sc = StandardScaler()
-                        _tv = list(itertools.chain(*_sc.fit_transform(np.array(_l).reshape(-1, 1)).reshape(1,-1).tolist()))
+                        _l = _rx[_sp].to_list()
                         _len_list = _rx[f"{_sp} length"].to_list()
                         
-                        _rx[f"Scaled {_sp}"] = [_tv[x - y: x] for x, y in zip(accumulate(_len_list), _len_list)]                    
+                        if year == 20 and _sp == "EDA":
+                            _tl = []
+                            
+                            for _dl in _l:
+                                _tl.append([_dl[i] - _dl[i - 1] for i in range(1, len(_dl))])
+                                
+                            _l = _tl
+                            _len_list = [_le - 1 for _le in _len_list]
+                        
+                        _l = sum(_l, [])
+                            
+                        # using Standard scale for make scaled EDA and TEMP
+                        _sc = StandardScaler()
+                        _tv = list(itertools.chain(*_sc.fit_transform(np.array(_l).reshape(-1, 1)).reshape(1, -1).tolist()))
+                        
+                        _rx[f"Scaled {_sp}"] = [_tv[x - y: x] for x, y in zip(accumulate(_len_list), _len_list)]
                         # print(f"{_suq}, {_sx}, {_sp}")
 
                     _rdf.update(_rx.set_index("Segment ID"))
