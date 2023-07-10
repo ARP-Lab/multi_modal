@@ -147,6 +147,7 @@ class PreProcessing(zconf):
                 
         res = res[["timestamp", "sid"] + lable]
         res = res.sort_values("timestamp")
+        res = res.drop_duplicates(["timestamp", "sid"], keep="first")
         res = res.reset_index(drop=True)
         
         # print(result.to_string())
